@@ -1,19 +1,12 @@
-import test from "./pages/test"
+import React from 'react'
+import Sidebar from './components/Sidebar/Sidebar'
+import Main from './components/Main/Main'
 
-function App() {
-  
+const App = () => {
   return (
     <>
-         <h1>테스트2</h1>
-         <h1>테스트2</h1>
-         <h1>테스트2</h1>
-         <h1>테스트2</h1>
-         <h1>테스트2</h1>
-         <h1>테스트2</h1>
-         <h1>테스트2</h1>
-         <h1>테스트2</h1>
-         <h1>테스트2</h1>
-        
+      <Sidebar/>
+      <Main/>
     </>
   )
 }
