@@ -1,6 +1,5 @@
-// src/context/Context.jsx
 import { createContext, useState } from "react";
-import main from "../config/Gemini";
+import axiosInstance from "../api/axiosInstance";
 
 export const Context = createContext();
 
@@ -9,7 +8,7 @@ const ContextProvider = (props) => {
     // 로그인 관련 상태
     // ==========================
     const [token, setToken] = useState(localStorage.getItem("user_jwt") || null);
-    const [username, setUsername] = useState(""); // 필요시 사용자 이름 관리
+    const [username, setUsername] = useState("");
 
     const login = (jwt, user) => {
         localStorage.setItem("user_jwt", jwt);
@@ -33,6 +32,7 @@ const ContextProvider = (props) => {
     const [loading, setLoading] = useState(false);
     const [resultData, setResultData] = useState("");
     const [history, setHistory] = useState([]);
+    const [typingLock, setTypingLock] = useState(false); // AI 답변 중 입력 차단
 
     const delayPara = (index, nextWord) => {
         setTimeout(() => {
@@ -45,63 +45,80 @@ const ContextProvider = (props) => {
         setShowResult(false);
         setHistory([]);
         setResultData("");
+        setTypingLock(false);
     };
 
-    const onSent = async (prompt) => {
+    // ==========================
+    // AI 메시지 전송
+    // ==========================
+    const onSent = async (promptText) => {
+        const currentPrompt = promptText?.trim();
+        if (!currentPrompt || typingLock) return;
+
+        // 입력창 즉시 초기화
+        setInput("");
         setResultData("");
         setLoading(true);
         setShowResult(true);
+        setTypingLock(true); // AI 답변 시작 시 입력 차단
 
-        const currentPrompt = prompt !== undefined ? prompt : input;
-
-        if (prompt === undefined) {
-            setPrevPrompts((prev) => [...prev, currentPrompt]);
-        }
-
+        // 사용자 메시지 기록
+        setPrevPrompts((prev) => [...prev, currentPrompt]);
         setRecentPrompt(currentPrompt);
         setHistory((prev) => [...prev, { type: "user", text: currentPrompt }]);
-        setInput("");
 
-        const response = await main(currentPrompt);
+        try {
+            const response = await axiosInstance.post("/api/ai/ask", { message: currentPrompt });
+            const aiText = response.data?.result || response.data?.message;
 
-        // 강조 ** 처리
-        let responseArray = response.split("**");
-        let newResponse = "";
-        for (let i = 0; i < responseArray.length; i++) {
-            if (i === 0 || i % 2 !== 1) {
-                newResponse += responseArray[i];
-            } else {
-                newResponse += "<b>" + responseArray[i] + "</b>";
+            if (!aiText) {
+                setResultData("AI 서버로부터 올바른 응답을 받지 못했습니다.");
+                setLoading(false);
+                setTypingLock(false);
+                return;
             }
-        }
 
-        let newResponse2 = newResponse.split("*").join("</br>");
+            let textStr = String(aiText);
 
-        // 글자 단위로 딜레이 처리
-        let newResponseArray = newResponse2.split(" ");
-        for (let i = 0; i < newResponseArray.length; i++) {
-            const nextWord = newResponseArray[i];
-            delayPara(i, nextWord + " ");
-        }
+            // 강조 ** 처리
+            let responseArray = textStr.split("**");
+            let newResponse = "";
+            for (let i = 0; i < responseArray.length; i++) {
+                newResponse += i % 2 === 1 ? "<b>" + responseArray[i] + "</b>" : responseArray[i];
+            }
 
-        setTimeout(() => {
-            setHistory((prev) => [...prev, { type: "ai", text: newResponse2 }]);
+            // 줄바꿈 * 처리
+            newResponse = newResponse.split("*").join("</br>");
+
+            // 타이핑 효과
+            const words = newResponse.split(" ");
+            words.forEach((word, index) => delayPara(index, word + " "));
+
+            // 타이핑 완료 후 history에 저장
+            setTimeout(() => {
+                setHistory((prev) => [...prev, { type: "ai", text: newResponse }]);
+                setLoading(false);
+                setResultData("");
+                setTypingLock(false); // AI 답변 종료 시 입력 허용
+            }, 75 * words.length);
+
+        } catch (error) {
+            console.error("AI 요청 오류:", error);
+            const errorMessage = error.response?.data?.message || "AI 요청 중 오류가 발생했습니다.";
+            setResultData(errorMessage);
             setLoading(false);
-            setResultData("");
-        }, 75 * newResponseArray.length);
+            setTypingLock(false);
+        }
     };
 
     // ==========================
     // Context value
     // ==========================
     const contextValue = {
-        // 로그인
         token,
         username,
         login,
         logout,
-
-        // 채팅
         prevPrompts,
         setPrevPrompts,
         onSent,
@@ -115,6 +132,7 @@ const ContextProvider = (props) => {
         newChat,
         history,
         setHistory,
+        typingLock, // Main.jsx에서 입력 차단에 사용
     };
 
     return <Context.Provider value={contextValue}>{props.children}</Context.Provider>;
