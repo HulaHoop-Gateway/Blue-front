@@ -52,4 +52,21 @@
     border-radius: 5px;
     cursor: pointer;
   }
+  .signup-link {
+    text-align: center;
+    margin-top: 1rem;
+    color: #555;
+    font-size: 0.9rem;
+  }
+  
+  .signup-link span {
+    color: #007bff;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  
+  .signup-link span:hover {
+    text-decoration: underline;
+  }
+  
   

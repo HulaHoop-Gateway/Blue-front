@@ -1,19 +1,23 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
-import './LoginPage.css';
+import "./LoginPage.css";
 
 export default function LoginPage({ onLogin }) {
-  const [username, setUsername] = useState("");
+  const [id, setId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      const response = await axiosInstance.post("/api/login", { username, password });
+      // ✅ 백엔드 LoginRequest { id, password } 와 동일하게 전송
+      const response = await axiosInstance.post("/api/login", { id, password });
       const token = response.data.token;
+
       if (token) {
         localStorage.setItem("user_jwt", token);
         onLogin(token);
@@ -34,17 +38,32 @@ export default function LoginPage({ onLogin }) {
 
         <div className="form-group">
           <label>아이디</label>
-          <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} required />
+          <input
+            type="text"
+            value={id}
+            onChange={(e) => setId(e.target.value)}
+            required
+          />
         </div>
 
         <div className="form-group">
           <label>비밀번호</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
         </div>
 
         {error && <div className="error-message">{error}</div>}
 
         <button type="submit">로그인</button>
+
+        <p className="signup-link">
+          아직 회원이 아니신가요?{" "}
+          <span onClick={() => navigate("/signup")}>회원가입</span>
+        </p>
       </form>
     </div>
   );
