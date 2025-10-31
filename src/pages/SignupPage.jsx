@@ -11,7 +11,7 @@ export default function SignupPage() {
     phoneNum: "",
     address: "",
     email: "",
-    agreements: [false, false, false, false], // 마지막이 알림 수신동의
+    agreements: [false, false, false, false], // 마지막은 알림 수신 동의 (선택)
   });
 
   const [error, setError] = useState("");
@@ -26,14 +26,14 @@ export default function SignupPage() {
     setSuccess("");
   };
 
-  // ✅ 약관 체크박스
+  // ✅ 약관 체크박스 업데이트
   const handleAgreementChange = (index) => {
     const updated = [...formData.agreements];
     updated[index] = !updated[index];
     setFormData((prev) => ({ ...prev, agreements: updated }));
   };
 
-  // ✅ 아이디 중복확인
+  // ✅ 아이디 중복 확인
   const handleIdCheck = async () => {
     if (!formData.id.trim()) {
       setIdCheckMessage("아이디를 입력해주세요.");
@@ -56,6 +56,19 @@ export default function SignupPage() {
     }
   };
 
+  // ✅ 카카오 주소검색 API 함수
+  const openAddressSearch = () => {
+    new window.daum.Postcode({
+      oncomplete: function (data) {
+        const address = data.address;
+        setFormData((prev) => ({
+          ...prev,
+          address,
+        }));
+      },
+    }).open();
+  };
+
   // ✅ 회원가입 처리
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -74,7 +87,7 @@ export default function SignupPage() {
       return;
     }
 
-    // ✅ 필수 약관 3개 체크 (마지막은 선택)
+    // 필수 약관 3개 체크
     if (formData.agreements.slice(0, 3).some((a) => !a)) {
       setError("필수 약관에 모두 동의해야 합니다.");
       return;
@@ -113,13 +126,9 @@ export default function SignupPage() {
               onChange={handleChange}
               required
             />
-            <button type="button" onClick={handleIdCheck}>
-              중복확인
-            </button>
+            <button type="button" onClick={handleIdCheck}>중복확인</button>
           </div>
-          {idCheckMessage && (
-            <div className="id-check-message">{idCheckMessage}</div>
-          )}
+          {idCheckMessage && <div className="id-check-message">{idCheckMessage}</div>}
         </div>
 
         {/* 비밀번호 */}
@@ -146,13 +155,13 @@ export default function SignupPage() {
               required
             />
             {formData.confirmPassword &&
-              formData.password !== formData.confirmPassword && (
-                <div className="inline-warning">비밀번호가 일치하지 않습니다.</div>
-              )}
+            formData.password !== formData.confirmPassword && (
+              <div className="inline-warning">비밀번호가 일치하지 않습니다.</div>
+            )}
             {formData.confirmPassword &&
-              formData.password === formData.confirmPassword && (
-                <div className="inline-good">비밀번호가 일치합니다.</div>
-              )}
+            formData.password === formData.confirmPassword && (
+              <div className="inline-good">비밀번호가 일치합니다.</div>
+            )}
           </div>
         </div>
 
@@ -184,13 +193,17 @@ export default function SignupPage() {
         {/* 주소 */}
         <div className="form-group">
           <label>주소 *</label>
-          <input
-            type="text"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            required
-          />
+          <div style={{ display: "flex", gap: "10px" }}>
+            <input
+              type="text"
+              name="address"
+              value={formData.address}
+              placeholder="주소를 검색해주세요"
+              readOnly
+              required
+            />
+            <button type="button" onClick={openAddressSearch}>검색</button>
+          </div>
         </div>
 
         {/* 이메일 */}
@@ -204,13 +217,13 @@ export default function SignupPage() {
           />
         </div>
 
-        {/* 약관 동의 */}
+        {/* 약관 */}
         <div className="agreements">
           <label>약관 동의 *</label>
           {[
-            "서비스 이용약관",
-            "개인정보 처리방침",
-            "위치기반 서비스 이용약관",
+            "서비스 이용약관 (필수)",
+            "개인정보 처리방침 (필수)",
+            "위치기반 서비스 이용약관 (필수)",
             "알림 메시지 수신 동의 (선택)",
           ].map((text, idx) => (
             <div key={idx} className="agreement-item">
