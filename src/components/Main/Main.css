@@ -43,31 +43,33 @@
 
 .main .cards{
     display: grid;
-    grid-template-columns: repeat(auto-fill,minmax(180px,1fr));
     gap: 15px;
+    grid-template-columns: repeat(auto-fill,minmax(300px,1fr));
     padding: 20px;
+    
 }
 
 .main .card{
-    height: 200px;
+    height: 150px;
     padding: 15px;
     background-color: #363E47;
     border-radius: 10px;
     position: relative;
+    border-left: 5px solid #EAECEF;
 }
 
 .main .card img{
     width: 35px;
     padding: 5px;
     position: absolute;
-    background-color: #d6d7d3;
+    background-color: #EAECEF;
     border-radius: 20px;
     bottom: 10px;
     right: 10px;
 }
 
 .main .card p{
-    color: #585858;
+    color: #d3baba;
     font-size: 17px;
 }
 
@@ -82,7 +84,7 @@
     max-width: 900px;
     padding: 0px 20px;
     margin: auto;
-    padding-bottom: 20px;
+    padding-bottom: 30px;
 }
 
 .search-box{
@@ -187,4 +189,5 @@
     font-weight: 300;
     line-height: 1.8;
 }
+
 
