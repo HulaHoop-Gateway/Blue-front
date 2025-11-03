@@ -88,7 +88,7 @@ const ContextProvider = (props) => {
             }
 
             // 줄바꿈 * 처리
-            newResponse = newResponse.split("*").join("</br>");
+            newResponse = newResponse.split("*").join("<br />");
 
             // 타이핑 효과
             const words = newResponse.split(" ");

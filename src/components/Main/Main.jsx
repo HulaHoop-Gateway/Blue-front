@@ -45,12 +45,16 @@ const Main = () => {
                         </div>
 
                         <div className="cards">
-                            {[1,2,3,4].map((_,i)=>(
-                                <div className="card" key={i}>
-                                    <p>예약하시고 싶은 영화를 말씀해주세요!</p>
-                                    <img src={assets.compass_icon} alt="" />
+                                <div className="card">
+                                    <p>예약하시고 싶은 영화를 말씀해주세요!<br/>
+                                    먼저 예약을 진행하시고 싶은 영화관 지점을 말해주시면 AI가 상영 중인 영화를 안내합니다.
+                                    영화 선택 후 시간과 정보들을 알려주시면 결제를 진행합니다.</p>
+                                    <img src={assets.compass_icon} alt="영화관 아이콘" />
                                 </div>
-                            ))}
+                                <div className="card">
+                                    <p>예약하시고 싶은 자전거를 말씀해주세요!</p>
+                                    <img src={assets.compass_icon} alt="자전거아이콘" />
+                                </div>
                         </div>
                     </>
                 ) : (
@@ -64,7 +68,10 @@ const Main = () => {
                                 ) : (
                                     <div className="result-data">
                                         <img src={assets.chatbot_icon} alt="" />
-                                        <p style={{ whiteSpace: "pre-wrap" }}>{item.text}</p>
+                                        <p
+                                            style={{ whiteSpace: "pre-wrap" }}
+                                            dangerouslySetInnerHTML={{ __html: item.text }}
+                                        />
                                     </div>
                                 )}
                             </React.Fragment>
@@ -74,7 +81,10 @@ const Main = () => {
                             <div className="result-data">
                                 <img src={assets.chatbot_icon} alt="" />
                                 {resultData ? (
-                                    <p style={{ whiteSpace: "pre-wrap" }}>{resultData}</p>
+                                    <p
+                                        style={{ whiteSpace: "pre-wrap" }}
+                                        dangerouslySetInnerHTML={{ __html: resultData }}
+                                    />
                                 ) : (
                                     <div className='loader'>
                                         <hr /><hr /><hr />

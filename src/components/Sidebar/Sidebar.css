@@ -7,20 +7,27 @@ p {
     display: inline-flex;
     flex-direction: column;
     justify-content: space-between;
-    background-color: rgba(99, 117, 197, 0.15);
     padding: 25px 15px;
-    background-color: #153558;
-
+    background-color:  #2B2F4C;
 }
 
 .sidebar img{
     width: 20px;
+    border-radius: 50px;
 }
 
 .sidebar .menu{
+    padding: 10px;
+    width: 50px;
+    height: 50px;
     display: block;
-    margin-left: 10px;
     cursor: pointer;
+}
+
+.sidebar .menu:hover{
+     background:#27a5ff;
+    transition: all 0.3s ease-in-out;
+    
 }
 
 .sidebar .new-chat{
@@ -48,18 +55,20 @@ p {
 
 .sidebar .recent-entry{
     display: flex;
-    align-items: start;
+    align-items: center;
     gap: 10px;
     padding: 10px;
     padding-right: 40px;
     border-radius: 50px;
     color: #282828;
     cursor: pointer;
+    transition: all 0.1s ease-in-out;
 }
 
 
 .sidebar .recent-entry:hover{
-    background-color: #e2e6eb;
+     background: rgba(255, 255, 255, 0.12);
+    transition: all 0.3s ease-in-out;
 }
 
 .sidebar .bottom{

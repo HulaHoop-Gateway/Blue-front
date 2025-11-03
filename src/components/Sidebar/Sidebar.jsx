@@ -18,7 +18,7 @@ const Sidebar = ({ onLogout }) => {
     return (
         <div className="sidebar">
             <div className="top">
-                <img 
+                <img
                     onClick={() => setExtended(prev => !prev)} 
                     className="menu" 
                     src={assets.menu_icon} 
@@ -29,7 +29,7 @@ const Sidebar = ({ onLogout }) => {
                     {extended && <p>새로운 채팅</p>}
                 </div>
 
-                {extended && (
+                {/* {extended && (
                     <div className="recent">
                         <p className="recent-title">최근 내역</p>
                         {prevPrompts.map((item, index) => (
@@ -39,7 +39,7 @@ const Sidebar = ({ onLogout }) => {
                             </div>
                         ))}
                     </div>
-                )}
+                )} */}
             </div>
 
             <div className="bottom">
@@ -48,7 +48,7 @@ const Sidebar = ({ onLogout }) => {
                     {extended && <p>마이페이지</p>}
                 </div>
                 <div className="bottom-item recent-entry" onClick={onLogout} style={{ cursor: 'pointer' }}>
-                    <img src={assets.logout_icon} alt="로그아웃" />
+                    <img src={assets.user_icon} alt="로그아웃 아이콘으로 바꿀 예정" />
                     {extended && <p>로그아웃</p>}
                 </div>
                 <div className="bottom-item recent-entry">
