@@ -1,141 +1,109 @@
-import { createContext, useState } from "react";
+import { createContext, useState, useEffect } from "react";
 import axiosInstance from "../api/axiosInstance";
 
 export const Context = createContext();
 
-const ContextProvider = (props) => {
+export const ContextProvider = ({ token, setToken, children }) => {
     // ==========================
-    // 로그인 관련 상태
+    // 로그인된 유저 정보
     // ==========================
-    const [token, setToken] = useState(localStorage.getItem("user_jwt") || null);
     const [username, setUsername] = useState("");
 
     const login = (jwt, user) => {
         localStorage.setItem("user_jwt", jwt);
-        setToken(jwt);
+        setToken(jwt);             // ✅ App에게 token 전달
         setUsername(user || "");
+        newChat();                 // ✅ 로그인 시 기존 대화 초기화
     };
 
-    const logout = () => {
+    const logout = async () => {
+        try {
+            await axiosInstance.post("/api/ai/reset");
+        } catch (e) {
+            console.warn("대화 초기화 실패", e);
+        }
         localStorage.removeItem("user_jwt");
-        setToken(null);
+        setToken(null);            // ✅ App에서 token 비움
         setUsername("");
+        newChat();                 // ✅ 로그아웃 시 대화 초기화
     };
 
     // ==========================
-    // 채팅 관련 상태
+    // 채팅 상태
     // ==========================
     const [input, setInput] = useState("");
-    const [recentPrompt, setRecentPrompt] = useState("");
-    const [prevPrompts, setPrevPrompts] = useState([]);
     const [showResult, setShowResult] = useState(false);
     const [loading, setLoading] = useState(false);
     const [resultData, setResultData] = useState("");
     const [history, setHistory] = useState([]);
-    const [typingLock, setTypingLock] = useState(false); // AI 답변 중 입력 차단
+    const [typingLock, setTypingLock] = useState(false);
 
-    const delayPara = (index, nextWord) => {
-        setTimeout(() => {
-            setResultData((prev) => prev + nextWord);
-        }, 75 * index);
+    const delayPara = (i, w) => {
+        setTimeout(() => setResultData(prev => prev + w), 75 * i);
     };
 
     const newChat = () => {
-        setLoading(false);
-        setShowResult(false);
         setHistory([]);
         setResultData("");
+        setShowResult(false);
+        setLoading(false);
         setTypingLock(false);
     };
 
+    // ✅ token이 바뀌면(다른 계정 로그인) → 대화 초기화
+    useEffect(() => {
+        newChat();
+    }, [token]);
+
     // ==========================
-    // AI 메시지 전송
+    // AI 요청
     // ==========================
     const onSent = async (promptText) => {
-        const currentPrompt = promptText?.trim();
-        if (!currentPrompt || typingLock) return;
+        const text = promptText?.trim();
+        if (!text || typingLock) return;
 
-        // 입력창 즉시 초기화
         setInput("");
         setResultData("");
         setLoading(true);
         setShowResult(true);
-        setTypingLock(true); // AI 답변 시작 시 입력 차단
+        setTypingLock(true);
 
-        // 사용자 메시지 기록
-        setPrevPrompts((prev) => [...prev, currentPrompt]);
-        setRecentPrompt(currentPrompt);
-        setHistory((prev) => [...prev, { type: "user", text: currentPrompt }]);
+        setHistory(prev => [...prev, { type: "user", text }]);
 
         try {
-            const response = await axiosInstance.post("/api/ai/ask", { message: currentPrompt });
-            const aiText = response.data?.result || response.data?.message;
+            const res = await axiosInstance.post("/api/ai/ask", { message: text });
+            const aiText = res.data?.result || res.data?.message;
+            if (!aiText) return;
 
-            if (!aiText) {
-                setResultData("AI 서버로부터 올바른 응답을 받지 못했습니다.");
+            let modified = aiText.split("**")
+                .map((v, i) => (i % 2 ? `<b>${v}</b>` : v))
+                .join("")
+                .replace(/\*/g, "<br />");
+
+            const words = modified.split(" ");
+            words.forEach((word, i) => delayPara(i, word + " "));
+
+            setTimeout(() => {
+                setHistory(prev => [...prev, { type: "ai", text: modified }]);
+                setResultData("");
                 setLoading(false);
                 setTypingLock(false);
-                return;
-            }
-
-            let textStr = String(aiText);
-
-            // 강조 ** 처리
-            let responseArray = textStr.split("**");
-            let newResponse = "";
-            for (let i = 0; i < responseArray.length; i++) {
-                newResponse += i % 2 === 1 ? "<b>" + responseArray[i] + "</b>" : responseArray[i];
-            }
-
-            // 줄바꿈 * 처리
-            newResponse = newResponse.split("*").join("<br />");
-
-            // 타이핑 효과
-            const words = newResponse.split(" ");
-            words.forEach((word, index) => delayPara(index, word + " "));
-
-            // 타이핑 완료 후 history에 저장
-            setTimeout(() => {
-                setHistory((prev) => [...prev, { type: "ai", text: newResponse }]);
-                setLoading(false);
-                setResultData("");
-                setTypingLock(false); // AI 답변 종료 시 입력 허용
             }, 75 * words.length);
 
-        } catch (error) {
-            console.error("AI 요청 오류:", error);
-            const errorMessage = error.response?.data?.message || "AI 요청 중 오류가 발생했습니다.";
-            setResultData(errorMessage);
+        } catch (err) {
+            setResultData("서버 오류 발생");
             setLoading(false);
             setTypingLock(false);
         }
     };
 
-    // ==========================
-    // Context value
-    // ==========================
-    const contextValue = {
-        token,
-        username,
-        login,
-        logout,
-        prevPrompts,
-        setPrevPrompts,
-        onSent,
-        setRecentPrompt,
-        recentPrompt,
-        showResult,
-        loading,
-        resultData,
-        input,
-        setInput,
-        newChat,
-        history,
-        setHistory,
-        typingLock, // Main.jsx에서 입력 차단에 사용
-    };
-
-    return <Context.Provider value={contextValue}>{props.children}</Context.Provider>;
+    return (
+        <Context.Provider value={{
+            token, username, login, logout,
+            input, setInput, onSent, showResult,
+            loading, resultData, history, typingLock, newChat
+        }}>
+            {children}
+        </Context.Provider>
+    );
 };
-
-export default ContextProvider;
