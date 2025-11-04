@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import MyPage from "./pages/MyPage";
-import { ContextProvider } from "./context/Context";  // ✅ ContextProvider import
+import { ContextProvider } from "./context/Context";
 
 export default function App() {
   const [token, setToken] = useState(null);
