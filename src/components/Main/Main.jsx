@@ -1,34 +1,51 @@
-import React, { useContext, useEffect, useRef } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import './Main.css';
 import { assets } from '../../assets/assets';
 import { Context } from '../../context/Context';
+import SeatModal from "../Seat/SeatModal";
 
 const Main = () => {
-    const { onSent, showResult, loading, resultData, setInput, input, history, typingLock } = useContext(Context);
+    const {
+        onSent, showResult, loading, resultData,
+        setInput, input, history, typingLock,
+        scheduleNum, seatModalOpen, setSeatModalOpen
+    } = useContext(Context);
+
     const chatContainerRef = useRef(null);
+    const inputRef = useRef(null);
+
+    // ✅ 한글 IME 조합 상태
+    const [isComposing, setIsComposing] = useState(false);
 
     useEffect(() => {
         if (chatContainerRef.current) {
-            const element = chatContainerRef.current;
-            element.scrollTo({
-                top: element.scrollHeight,
+            chatContainerRef.current.scrollTo({
+                top: chatContainerRef.current.scrollHeight,
                 behavior: 'smooth'
             });
         }
     }, [history, resultData]);
 
     const sendMessage = () => {
-        if (input.trim() === '' || typingLock) return;
-        onSent(input);
-    }
+        const trimmed = (input || '').trim();
+        if (!trimmed || typingLock || isComposing) return;
+
+        const message = trimmed;
+
+        // ✅ 조합 중 글자 재삽입 방지 흐름
+        inputRef.current?.blur();
+        setInput('');
+
+        setTimeout(() => onSent(message), 0);
+    };
 
     const handleKeyDown = (e) => {
         if (typingLock) return;
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && !isComposing) {
             e.preventDefault();
             sendMessage();
         }
-    }
+    };
 
     return (
         <div className='main'>
@@ -45,16 +62,14 @@ const Main = () => {
                         </div>
 
                         <div className="cards">
-                                <div className="card">
-                                    <p>예약하시고 싶은 영화를 말씀해주세요!<br/>
-                                    먼저 예약을 진행하시고 싶은 영화관 지점을 말해주시면 AI가 상영 중인 영화를 안내합니다.
-                                    영화 선택 후 시간과 정보들을 알려주시면 결제를 진행합니다.</p>
-                                    <img src={assets.compass_icon} alt="영화관 아이콘" />
-                                </div>
-                                <div className="card">
-                                    <p>예약하시고 싶은 자전거를 말씀해주세요!</p>
-                                    <img src={assets.compass_icon} alt="자전거아이콘" />
-                                </div>
+                            <div className="card">
+                                <p>영화관 지점을 말하면 AI가 상영 정보와 스케줄을 안내합니다.</p>
+                                <img src={assets.compass_icon} alt="영화관 아이콘" />
+                            </div>
+                            <div className="card">
+                                <p>예약하시고 싶은 자전거를 말씀해주세요!</p>
+                                <img src={assets.compass_icon} alt="자전거 아이콘" />
+                            </div>
                         </div>
                     </>
                 ) : (
@@ -98,12 +113,17 @@ const Main = () => {
                 <div className="main-bottom">
                     <div className="search-box">
                         <input
+                            ref={inputRef}
                             onKeyDown={handleKeyDown}
+                            onCompositionStart={() => setIsComposing(true)}
+                            onCompositionEnd={() => setIsComposing(false)}
                             onChange={(e) => setInput(e.target.value)}
                             value={input}
                             type="text"
                             placeholder='텍스트를 입력해주세요..'
                             disabled={typingLock}
+                            autoComplete="off"
+                            spellCheck={false}
                         />
                         <div>
                             <img src={assets.mic_icon} alt="" />
@@ -114,8 +134,15 @@ const Main = () => {
                     </div>
                 </div>
             </div>
+
+            {/* ✅ 좌석 모달 */}
+            <SeatModal
+                open={seatModalOpen}
+                scheduleNum={scheduleNum}
+                onClose={() => setSeatModalOpen(false)}
+            />
         </div>
     );
-}
+};
 
 export default Main;
