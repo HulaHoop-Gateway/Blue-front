@@ -3,7 +3,7 @@ import SeatMap from "./SeatMap";
 import axiosInstance from "../../api/axiosInstance";
 import "./SeatModal.css";
 
-export default function SeatModal({ open, onClose, scheduleNum }) {
+export default function SeatModal({ open, onClose, scheduleNum, userId }) {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -11,6 +11,10 @@ export default function SeatModal({ open, onClose, scheduleNum }) {
     if (open) {
       setSelectedSeats([]);
       setRefreshKey(prev => prev + 1);
+
+      setTimeout(() => {
+        window.refreshSeats?.();
+      }, 50);
     }
   }, [open]);
 
@@ -30,12 +34,20 @@ export default function SeatModal({ open, onClose, scheduleNum }) {
         });
       }
 
+      // ✅ DB 저장 성공
       alert("✅ 좌석 예약 완료!");
 
-      // 🔥 좌석 UI 즉시 새로고침
-      if (typeof window.refreshSeats === "function") {
-        window.refreshSeats();
-      }
+      // ✅ 좌석 최신화
+      window.refreshSeats?.();
+
+      // ✅ AI 시나리오 종료 + 메시지 출력
+      const res = await axiosInstance.post(`/api/chat/complete-seat?userId=${userId}`);
+      const aiMsg = res.data?.message || `✅ 좌석 선택이 완료되었습니다!\n💳 10분 내 결제해주세요.`;
+
+      alert(aiMsg);
+
+      // ✅ 모달 닫기
+      onClose();
 
     } catch (err) {
       alert("❌ 예약 실패: " + err.response?.data);
