@@ -56,21 +56,34 @@ const Main = () => {
             <div className="main-container">
                 {!showResult ? (
                     <>
+                    <div className='card-view-scroll-container'>
+
                         <div className="greet">
                             <p><span>안녕하세요!</span></p>
                             <p>예약하시고 싶은 것을 말씀해주세요!</p>
                         </div>
 
                         <div className="cards">
-                            <div className="card">
-                                <p>영화관 지점을 말하면 AI가 상영 정보와 스케줄을 안내합니다.</p>
-                                <img src={assets.compass_icon} alt="영화관 아이콘" />
+                            <div>
+                                <div className='card-top'>
+                                    <img src={assets.cinema_icon} alt="영화관 아이콘" />
+                                    <p>영화관</p>
+                                </div>
+                                <div className="card">
+                                    <p>영화관 지점을 말하면 AI가 상영 정보와 스케줄을 안내합니다.</p>
+                                </div>
                             </div>
-                            <div className="card">
-                                <p>예약하시고 싶은 자전거를 말씀해주세요!</p>
+                            <div>
+                                <div className="card-top">
                                 <img src={assets.compass_icon} alt="자전거 아이콘" />
+                                <p>자전거</p>
+                                </div>
+                                <div className="card">
+                                    <p>예약하시고 싶은 자전거를 말씀해주세요!</p>
+                                </div>
                             </div>
                         </div>
+                    </div>
                     </>
                 ) : (
                     <div className='result' ref={chatContainerRef}>
