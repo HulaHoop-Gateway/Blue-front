@@ -1,5 +1,5 @@
 import history_icon from './history_icon.png'
-import menu_icon from './menu_icon.png'
+import menu_icon from './menu_icon.svg'
 import plus_icon from './plus_icon.png'
 import question_icon from './question_icon.png'
 import setting_icon from './setting_icon.png'
@@ -12,6 +12,7 @@ import message_icon from './message_icon.png'
 import code_icon from './code_icon.png'
 import send_icon from './send_icon.png'
 import chatbot_icon from './chatbot_icon.svg'
+import cinema_icon from './cinema_icon.svg'
 
 export const assets = {
     history_icon,
@@ -27,5 +28,6 @@ export const assets = {
     message_icon,
     code_icon,
     send_icon,
-    chatbot_icon
+    chatbot_icon,
+    cinema_icon
 }

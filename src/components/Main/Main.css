@@ -49,6 +49,30 @@
     
 }
 
+.card-top {
+  display: flex; 
+  align-items: center; 
+  align-content: center;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.card-top p {
+  /* 글자 크기 키우기 (예시: 20px) */
+  font-size: 30px; 
+  /* 글자 굵기 키우기 (예시: bold 또는 700) */
+  font-weight: bold; 
+  /* p 태그의 기본 마진(margin)을 제거하여 정렬에 방해되지 않도록 합니다. */
+  margin: 0; 
+}
+.main .cards img{
+    width: 36px;
+    padding: 5px;
+    background-color: #EAECEF;
+    border-radius: 20px;
+    bottom: 10px;
+    right: 10px;
+}
 .main .card{
     height: 150px;
     padding: 15px;
@@ -58,15 +82,6 @@
     border-left: 5px solid #EAECEF;
 }
 
-.main .card img{
-    width: 35px;
-    padding: 5px;
-    position: absolute;
-    background-color: #EAECEF;
-    border-radius: 20px;
-    bottom: 10px;
-    right: 10px;
-}
 
 .main .card p{
     color: #d3baba;
@@ -98,7 +113,7 @@
 }
 
 .search-box img{
-    width: 35px;
+    width: 38px;
     padding: 8px;
     border-radius: 20px;
     cursor: pointer;
@@ -106,7 +121,7 @@
 }
 
 .search-box img:hover{
-    background-color: #ffffff;
+     background: rgba(255, 255, 255, 0.12);
     transition: all 0.3s ease-in-out;
 }
 
@@ -123,7 +138,7 @@
 .search-box div{
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 5px;
 }
 
 .result {
@@ -133,6 +148,20 @@
     display: flex;
     flex-direction: column;
 }
+
+.card-view-scroll-container {
+    max-height: 80vh; /* .result와 동일한 높이 제한 */
+    overflow-y: auto; /* 내용이 넘칠 때만 스크롤바 표시 (auto가 더 자연스러움) */
+    
+    /* .result의 스크롤바 숨김 처리를 동일하게 적용 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE */
+}
+
+.card-view-scroll-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+}
+
 
 .result::-webkit-scrollbar{
     display: none;
