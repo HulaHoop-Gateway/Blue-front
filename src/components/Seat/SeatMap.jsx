@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import "./SeatMap.css";
+import React from "react";
 
 export default function SeatMap({ scheduleNum, selectedSeats, setSelectedSeats }) {
   const [seats, setSeats] = useState([]);
@@ -10,16 +11,21 @@ export default function SeatMap({ scheduleNum, selectedSeats, setSelectedSeats }
     try {
       const res = await axiosInstance.get(`/api/movies/seats?scheduleNum=${scheduleNum}`);
       setSeats(res.data || []);
-    } catch (error) {
-      console.error("좌석 정보를 불러오는 데 실패했습니다:", error);
+    } catch (err) {
+      console.error("좌석 정보를 불러오는 데 실패했습니다:", err);
       setSeats([]);
     }
   }
 
   useEffect(() => {
     fetchSeats();
-    window.refreshSeats = fetchSeats; // 🔥 예약 후 SeatMap 새로고침 가능하게 등록
-    return () => delete window.refreshSeats;
+
+    // ✅ SeatModal에서 호출 가능하게 만들기
+    window.refreshSeats = () => fetchSeats();
+
+    return () => {
+      window.refreshSeats = null; // ✅ cleanup
+    };
   }, [scheduleNum]);
 
   const handleSeatClick = (seat) => {
@@ -32,20 +38,15 @@ export default function SeatMap({ scheduleNum, selectedSeats, setSelectedSeats }
     } else {
       setSelectedSeats([
         ...selectedSeats,
-        {
-          seatCode: seat.seat_code,
-          row: seat.row_label,
-          col: seat.col_num
-        }
+        { seatCode: seat.seat_code, row: seat.row_label, col: seat.col_num }
       ]);
     }
   };
 
-  const rows = seats.reduce((acc, seat) => {
-    const row = seat.row_label;
-    if (!row) return acc;
-    if (!acc[row]) acc[row] = [];
-    acc[row].push(seat);
+  const rows = seats.reduce((acc, s) => {
+    if (!s.row_label) return acc;
+    acc[s.row_label] = acc[s.row_label] || [];
+    acc[s.row_label].push(s);
     return acc;
   }, {});
 
@@ -56,18 +57,21 @@ export default function SeatMap({ scheduleNum, selectedSeats, setSelectedSeats }
         {Object.keys(rows).map((row) => (
           <div key={row} className="seat-row">
             <span className="seat-row-label">{row}</span>
-
             {rows[row]
               .sort((a, b) => a.col_num - b.col_num)
               .map((seat) => {
-                if (!seat || !seat.seat_code) return null;
-
-                if (seat.is_aisle === 1) {
+                if (seat.is_aisle === 1)
                   return <span key={`aisle-${seat.seat_code}`} className="aisle-space"></span>;
-                }
 
                 const isSelected = selectedSeats.some(s => s.seatCode === seat.seat_code);
-                const isAvailable = seat.reserved !== true;
+                const raw = seat.reserved;
+                const isReserved =
+                  raw === true || raw === 1 || raw === "1" ||
+                  String(raw).toUpperCase() === "TRUE" ||
+                  String(raw).toUpperCase() === "Y" ||
+                  String(raw).toUpperCase() === "YES";
+
+                const isAvailable = !isReserved;
 
                 return (
                   <button
