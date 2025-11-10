@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
-import HomePage from "./pages/HomePage";
 import MyPage from "./pages/MyPage";
-import SignupPage from "./pages/SignupPage"; // 🚨 SignupPage 컴포넌트를 import 해야 합니다.
+import Layout from "./components/Layout/Layout";
+import Main from "./components/Main/Main";
+
 import { ContextProvider } from "./context/Context";
 
 export default function App() {
@@ -47,14 +48,12 @@ export default function App() {
           {/* 로그인 페이지: 토큰이 있으면 홈으로 리다이렉트 */}
           <Route path="/login" element={token ? <Navigate to="/" /> : <LoginPage onLogin={handleLogin} />} />
           
-          {/* 🚨 회원가입 페이지 추가: /signup 경로로 접근 시 SignupPage 렌더링 */}
-          <Route path="/signup" element={<SignupPage />} />
-          
-          {/* 홈페이지: 토큰이 없으면 로그인으로 리다이렉트 */}
-          <Route path="/" element={token ? <HomePage onLogout={handleLogout} /> : <Navigate to="/login" />} />
-          
-          {/* 마이페이지: 토큰이 없으면 로그인으로 리다이렉트 */}
-          <Route path="/mypage" element={token ? <MyPage token={token} onLogout={handleLogout} /> : <Navigate to="/login" />} />
+          {/* 보호된 경로 (Layout을 통해 렌더링) */}
+          <Route path="/" element={token ? <Layout onLogout={handleLogout} /> : <Navigate to="/login" />}>
+            {/* Layout의 Outlet에서 렌더링될 컴포넌트들 */}
+            <Route index element={<Main />} />
+            <Route path="mypage" element={<MyPage token={token} onLogout={handleLogout} />} />
+          </Route>
         </Routes>
       </Router>
     </ContextProvider>

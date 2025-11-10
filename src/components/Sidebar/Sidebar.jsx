@@ -16,7 +16,7 @@ const Sidebar = ({ onLogout }) => {
     };
 
     return (
-        <div className="sidebar">
+        <div className={`sidebar ${extended ? 'extended' : ''}`}>
             <div className="top">
                 <img
                     onClick={() => setExtended(prev => !prev)} 
@@ -45,23 +45,23 @@ const Sidebar = ({ onLogout }) => {
             <div className="bottom">
                 <div className="bottom-item recent-entry" onClick={() => navigate('/mypage')} style={{ cursor: 'pointer' }}>
                     <img src={assets.user_icon} alt="마이페이지" />
-                    {extended && <p>마이페이지</p>}
+                    <p className={extended ? 'visible' : 'hidden'}>마이페이지</p>
                 </div>
                 <div className="bottom-item recent-entry" onClick={onLogout} style={{ cursor: 'pointer' }}>
                     <img src={assets.user_icon} alt="로그아웃 아이콘으로 바꿀 예정" />
-                    {extended && <p>로그아웃</p>}
+                    <p className={extended ? 'visible' : 'hidden'}>로그아웃</p>
                 </div>
                 <div className="bottom-item recent-entry">
                     <img src={assets.question_icon} alt="Help" />
-                    {extended && <p>Help</p>}
+                    <p className={extended ? 'visible' : 'hidden'}>Help</p>
                 </div>
                 <div className="bottom-item recent-entry">
                     <img src={assets.history_icon} alt="예약 내역" />
-                    {extended && <p>예약 내역</p>}
+                    <p className={extended ? 'visible' : 'hidden'}>예약 내역</p>
                 </div>
                 <div className="bottom-item recent-entry">
                     <img src={assets.setting_icon} alt="설정" />
-                    {extended && <p>설정</p>}
+                    <p className={extended ? 'visible' : 'hidden'}>설정</p>
                 </div>
             </div>
         </div>
