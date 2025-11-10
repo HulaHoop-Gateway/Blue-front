@@ -2,13 +2,37 @@ p {
   color: #ffffff;
 }
 
+.sidebar p {
+    color: rgb(145, 142, 142);
+    transition: opacity 0.3s ease-in-out; /* 부드러운 전환 효과 추가 */
+}
+
+.sidebar p.hidden {
+    opacity: 0;
+    pointer-events: none; /* 보이지 않을 때 클릭 방지 */
+}
+
+.sidebar p.visible {
+    opacity: 1;
+}
+
 .sidebar {
     min-height: 100vh;
     display: inline-flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: space-between; /* 다시 space-between으로 */
     padding: 25px 15px;
     background-color:  #2B2F4C;
+    /* === Gemini-like Animation Start === */
+    width: 80px; /* 축소 시 너비 */
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* 부드러운 전환 효과 */
+    overflow-x: hidden; /* 내용 넘침 방지 */
+    white-space: nowrap; /* 줄바꿈 방지 */
+    /* === Gemini-like Animation End === */
+}
+
+.sidebar.extended {
+    width: 250px; /* 확장 시 너비 */
 }
 
 .sidebar img{
@@ -22,6 +46,13 @@ p {
     height: 50px;
     display: block;
     cursor: pointer;
+    /* === Gemini-like Animation Start === */
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease-in-out;
+    /* === Gemini-like Animation End === */
+}
+
+.sidebar.extended .menu {
+    transform: rotate(180deg); /* 확장 시 아이콘 회전 */
 }
 
 .sidebar .menu:hover{
@@ -51,6 +82,10 @@ p {
 .sidebar .recent-title{
     margin-top: 30px;
     margin-bottom: 20px;
+}
+
+.sidebar .recent-entry p{
+    color: rgb(216, 211, 211);
 }
 
 .sidebar .recent-entry{
