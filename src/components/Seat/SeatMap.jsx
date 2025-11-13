@@ -19,20 +19,14 @@ export default function SeatMap({ scheduleNum, selectedSeats, setSelectedSeats }
 
   useEffect(() => {
     fetchSeats();
-
-    // ✅ SeatModal에서 호출 가능하게 만들기
     window.refreshSeats = () => fetchSeats();
-
-    return () => {
-      window.refreshSeats = null; // ✅ cleanup
-    };
+    return () => { window.refreshSeats = null; };
   }, [scheduleNum]);
 
   const handleSeatClick = (seat) => {
     if (!seat || !seat.seat_code || seat.is_aisle === 1) return;
 
     const alreadySelected = selectedSeats.some(s => s.seatCode === seat.seat_code);
-
     if (alreadySelected) {
       setSelectedSeats(selectedSeats.filter(s => s.seatCode !== seat.seat_code));
     } else {

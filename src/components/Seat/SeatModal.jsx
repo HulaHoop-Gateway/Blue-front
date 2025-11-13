@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import SeatMap from "./SeatMap";
 import axiosInstance from "../../api/axiosInstance";
 import "./SeatModal.css";
+import { Context } from "../../context/Context";
 
 export default function SeatModal({ open, onClose, scheduleNum, userId }) {
+  const { onSent } = useContext(Context);
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -11,7 +13,6 @@ export default function SeatModal({ open, onClose, scheduleNum, userId }) {
     if (open) {
       setSelectedSeats([]);
       setRefreshKey(prev => prev + 1);
-
       setTimeout(() => {
         window.refreshSeats?.();
       }, 50);
@@ -40,11 +41,9 @@ export default function SeatModal({ open, onClose, scheduleNum, userId }) {
       // ✅ 좌석 최신화
       window.refreshSeats?.();
 
-      // ✅ AI 시나리오 종료 + 메시지 출력
-      const res = await axiosInstance.post(`/api/chat/complete-seat?userId=${userId}`);
-      const aiMsg = res.data?.message || `✅ 좌석 선택이 완료되었습니다!\n💳 10분 내 결제해주세요.`;
-
-      alert(aiMsg);
+      // ✅ AI 시나리오로 전달
+      const seatNames = selectedSeats.map(s => s.row + s.col).join(" ");
+      if (onSent) onSent(seatNames); // 예: "A2 B3"
 
       // ✅ 모달 닫기
       onClose();
