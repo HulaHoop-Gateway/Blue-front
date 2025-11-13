@@ -219,4 +219,15 @@
     line-height: 1.8;
 }
 
+.kakao-map-display {
+    margin: 20px 0; /* Add some vertical margin */
+    width: 100%; /* Take full width of its parent */
+    max-width: 600px; /* Optional: limit max width for better readability */
+    height: 400px; /* Fixed height for the map container */
+    border-radius: 10px; /* Optional: rounded corners */
+    overflow: hidden; /* Ensures map content stays within bounds */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional: subtle shadow */
+}
+
+
 

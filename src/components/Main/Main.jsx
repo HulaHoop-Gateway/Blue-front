@@ -3,12 +3,14 @@ import './Main.css';
 import { assets } from '../../assets/assets';
 import { Context } from '../../context/Context';
 import SeatModal from "../Seat/SeatModal";
+import KakaoMap from "../KakaoMap/KakaoMap"; // Import KakaoMap component
 
 const Main = () => {
     const {
         onSent, showResult, loading, resultData,
         setInput, input, history, typingLock,
-        scheduleNum, seatModalOpen, setSeatModalOpen
+        scheduleNum, seatModalOpen, setSeatModalOpen,
+        bikeLocations // Get bikeLocations from context
     } = useContext(Context);
 
     const chatContainerRef = useRef(null);
@@ -100,6 +102,12 @@ const Main = () => {
                                             style={{ whiteSpace: "pre-wrap" }}
                                             dangerouslySetInnerHTML={{ __html: item.text }}
                                         />
+                                    </div>
+                                )}
+                                {/* Render KakaoMap after the last AI message if bikeLocations are present */}
+                                {item.type === 'ai' && index === history.length - 1 && bikeLocations && bikeLocations.length > 0 && (
+                                    <div className="kakao-map-display">
+                                        <KakaoMap key={JSON.stringify(bikeLocations)} />
                                     </div>
                                 )}
                             </React.Fragment>

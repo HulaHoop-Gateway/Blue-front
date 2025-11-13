@@ -16,6 +16,7 @@ export const ContextProvider = ({ token, setToken, children }) => {
 
     const [scheduleNum, setScheduleNum] = useState(null);
     const [seatModalOpen, setSeatModalOpen] = useState(false);
+    const [bikeLocations, setBikeLocations] = useState([]); // New state for bike locations
 
     const login = (jwt, user) => {
         localStorage.setItem("user_jwt", jwt);
@@ -46,6 +47,7 @@ export const ContextProvider = ({ token, setToken, children }) => {
         setTypingLock(false);
         setScheduleNum(null);
         setSeatModalOpen(false);
+        setBikeLocations([]); // Reset bike locations on new chat
     };
 
     useEffect(() => {
@@ -101,6 +103,20 @@ export const ContextProvider = ({ token, setToken, children }) => {
 
         try {
             const res = await axiosInstance.post("/api/ai/ask", { message: text });
+            
+            // Check if the response contains bike locations in JSON format
+            if (res.data && Array.isArray(res.data.bicycles)) {
+                const bikes = res.data.bicycles;
+                setBikeLocations(bikes); // Still update global bikeLocations state for KakaoMap to consume
+                
+                const bikeSummary = `🚲 ${bikes.length}대의 자전거를 찾았습니다. 지도에 표시됩니다.`;
+                setHistory(prev => [...prev, { type: "ai", text: bikeSummary, bikeData: bikes }]); // Store bikeData with the history item
+                setResultData(""); // Clear resultData as map will be shown
+                setLoading(false);
+                setTypingLock(false);
+                return; // Exit early as bike locations are handled
+            }
+
             const aiText = res.data?.result || res.data?.message;
             if (!aiText) return;
 
@@ -111,6 +127,9 @@ export const ContextProvider = ({ token, setToken, children }) => {
                 aiText.match(/<!--\s*scheduleNum\s*:\s*([0-9]+)\s*-->/i);
 
             if (match) setScheduleNum(Number(match[1]));
+
+            // Removed old bike parsing regex as we now expect JSON
+            setBikeLocations([]); // Clear previous bike locations if no bikes in current response
 
             let modified = aiText
                 .split("**")
@@ -139,7 +158,8 @@ export const ContextProvider = ({ token, setToken, children }) => {
             token, username, login, logout,
             input, setInput, onSent, showResult,
             loading, resultData, history, typingLock, newChat,
-            scheduleNum, seatModalOpen, setSeatModalOpen
+            scheduleNum, seatModalOpen, setSeatModalOpen,
+            bikeLocations // Expose bikeLocations through context
         }}>
             {children}
         </Context.Provider>
