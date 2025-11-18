@@ -6,7 +6,7 @@ const axiosInstance = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: false, // JWT는 쿠키가 아닌 헤더로 전송
+  withCredentials: true, // JWT는 쿠키가 아닌 헤더로 전송
 });
 
 // 요청 시 JWT 자동 첨부
