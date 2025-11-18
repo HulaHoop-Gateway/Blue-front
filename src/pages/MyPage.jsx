@@ -13,7 +13,7 @@ export default function MyPage() {
 
   const [loading, setLoading] = useState(true);
 
-  // ✅ 회원정보 불러오기
+  // 회원정보 불러오기
   const fetchMemberInfo = async () => {
     try {
       const token = localStorage.getItem("user_jwt");
@@ -39,13 +39,13 @@ export default function MyPage() {
     fetchMemberInfo();
   }, []);
 
-  // ✅ 입력값 변경 핸들러
+  // 입력값 변경 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target;
     setMember((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ SNS 알림 토글 (서버 호출 ❌ / 상태만 변경)
+  // SNS 알림 토글 (서버 호출 ❌ / 상태만 변경)
   const handleNotificationToggle = (e) => {
     const enabled = e.target.checked;
     setMember((prev) => ({
@@ -54,7 +54,7 @@ export default function MyPage() {
     }));
   };
 
-  // ✅ 회원정보 수정 (여기서 모든 정보 + 알림 상태 전송)
+  // 회원정보 수정 (여기서 모든 정보 + 알림 상태 전송)
   const handleUpdate = async () => {
     const token = localStorage.getItem("user_jwt");
     try {
@@ -68,7 +68,7 @@ export default function MyPage() {
     }
   };
 
-  // ✅ 회원 탈퇴
+  // 회원 탈퇴
   const handleDelete = async () => {
     if (!window.confirm("정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) return;
     const token = localStorage.getItem("user_jwt");

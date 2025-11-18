@@ -2,7 +2,6 @@ import { createContext, useState, useEffect } from "react";
 import axiosInstance from "../api/axiosInstance";
 import React from "react";
 
-
 export const Context = createContext();
 
 export const ContextProvider = ({ token, setToken, children }) => {
@@ -16,8 +15,11 @@ export const ContextProvider = ({ token, setToken, children }) => {
 
     const [scheduleNum, setScheduleNum] = useState(null);
     const [seatModalOpen, setSeatModalOpen] = useState(false);
-    const [bikeLocations, setBikeLocations] = useState([]); // New state for bike locations
+    const [bikeLocations, setBikeLocations] = useState([]);
 
+    /** ------------------------
+     *  🔐 로그인 / 로그아웃
+     * ------------------------ */
     const login = (jwt, user) => {
         localStorage.setItem("user_jwt", jwt);
         setToken(jwt);
@@ -26,20 +28,44 @@ export const ContextProvider = ({ token, setToken, children }) => {
     };
 
     const logout = async () => {
-        try {
-            await axiosInstance.post("/api/ai/reset");
-        } catch {}
+        const token = localStorage.getItem("user_jwt");
+        if (token) {
+            try {
+                await axiosInstance.post("/api/ai/reset");
+            } catch (e) {
+                console.warn("AI reset failed (logout):", e);
+            }
+        }
+
         localStorage.removeItem("user_jwt");
         setToken(null);
         setUsername("");
-        newChat();
+        newChat(); // 로컬 클리어
     };
 
+    /** 텍스트 타이핑 효과 */
     const delayPara = (i, w) => {
         setTimeout(() => setResultData(prev => prev + w), 75 * i);
     };
 
-    const newChat = () => {
+    /** ------------------------
+     *  🧹 newChat(): 세션 초기화
+     * ------------------------ */
+    const newChat = async () => {
+        const token = localStorage.getItem("user_jwt");
+
+        /** 로그인한 사용자만 백엔드 세션 초기화 */
+        if (token) {
+            try {
+                await axiosInstance.post("/api/ai/reset", null, {
+                    withCredentials: false,
+                });
+            } catch (e) {
+                console.warn("AI reset skipped (not authenticated yet):", e);
+            }
+        }
+
+        // 프론트 로컬 초기화
         setHistory([]);
         setResultData("");
         setShowResult(false);
@@ -47,18 +73,22 @@ export const ContextProvider = ({ token, setToken, children }) => {
         setTypingLock(false);
         setScheduleNum(null);
         setSeatModalOpen(false);
-        setBikeLocations([]); // Reset bike locations on new chat
+        setBikeLocations([]);
     };
 
+    /** token이 변하면(로그인/로그아웃) newChat 실행 */
     useEffect(() => {
         newChat();
     }, [token]);
 
+    /** ------------------------
+     *   🧠 AI 메시지 전송
+     * ------------------------ */
     const onSent = async (promptText) => {
         const text = promptText?.trim();
         if (!text || typingLock) return;
 
-        /** ✅ 상세좌석 명령 처리 (AI 호출 없이 모달만 열기) */
+        /** 상세 좌석 명령 */
         if (
             text.includes("상세좌석") ||
             text.includes("상세 좌석") ||
@@ -67,11 +97,8 @@ export const ContextProvider = ({ token, setToken, children }) => {
             text.includes("좌석 볼래")
         ) {
             setInput("");
-
-            // ✅ 사용자 메시지 히스토리 기록
             setHistory(prev => [...prev, { type: "user", text }]);
 
-            // ✅ 스케줄 없는 경우
             if (!scheduleNum) {
                 setHistory(prev => [
                     ...prev,
@@ -80,19 +107,16 @@ export const ContextProvider = ({ token, setToken, children }) => {
                 return;
             }
 
-            // ✅ AI 응답 형태로 출력 (UI 흐름 자연스럽게)
             setHistory(prev => [
                 ...prev,
                 { type: "ai", text: "🎬 좌석 선택창을 열게요!" }
             ]);
 
-            // ✅ 좌석 모달 열기
             setSeatModalOpen(true);
-
             return;
         }
 
-        /** ✨ 일반 텍스트 요청 → AI 호출 */
+        /** 일반 텍스트 전송 */
         setInput("");
         setResultData("");
         setLoading(true);
@@ -103,24 +127,25 @@ export const ContextProvider = ({ token, setToken, children }) => {
 
         try {
             const res = await axiosInstance.post("/api/ai/ask", { message: text });
-            
-            // Check if the response contains bike locations in JSON format
+
+            /** 🚲 자전거 처리 */
             if (res.data && Array.isArray(res.data.bicycles)) {
                 const bikes = res.data.bicycles;
-                setBikeLocations(bikes); // Still update global bikeLocations state for KakaoMap to consume
-                
-                const bikeSummary = `🚲 ${bikes.length}대의 자전거를 찾았습니다. 지도에 표시됩니다.`;
-                setHistory(prev => [...prev, { type: "ai", text: bikeSummary, bikeData: bikes }]); // Store bikeData with the history item
-                setResultData(""); // Clear resultData as map will be shown
+                setBikeLocations(bikes);
+
+                const summary = `🚲 ${bikes.length}대의 자전거를 찾았습니다. 지도에 표시됩니다.`;
+                setHistory(prev => [...prev, { type: "ai", text: summary, bikeData: bikes }]);
+
+                setResultData("");
                 setLoading(false);
                 setTypingLock(false);
-                return; // Exit early as bike locations are handled
+                return;
             }
 
             const aiText = res.data?.result || res.data?.message;
             if (!aiText) return;
 
-            // ✅ scheduleNum 파싱
+            /** scheduleNum 추출 */
             const match =
                 aiText.match(/"scheduleNum"\s*:\s*([0-9]+)/i) ||
                 aiText.match(/scheduleNum\s*[:=]\s*([0-9]+)/i) ||
@@ -128,8 +153,7 @@ export const ContextProvider = ({ token, setToken, children }) => {
 
             if (match) setScheduleNum(Number(match[1]));
 
-            // Removed old bike parsing regex as we now expect JSON
-            setBikeLocations([]); // Clear previous bike locations if no bikes in current response
+            setBikeLocations([]);
 
             let modified = aiText
                 .split("**")
@@ -146,21 +170,24 @@ export const ContextProvider = ({ token, setToken, children }) => {
                 setLoading(false);
                 setTypingLock(false);
             }, 75 * words.length);
-        } catch {
+        } catch (e) {
             setResultData("서버 오류 발생");
             setLoading(false);
             setTypingLock(false);
         }
     };
 
+    /** 👇 Context Provider Exports */
     return (
-        <Context.Provider value={{
-            token, username, login, logout,
-            input, setInput, onSent, showResult,
-            loading, resultData, history, typingLock, newChat,
-            scheduleNum, seatModalOpen, setSeatModalOpen,
-            bikeLocations // Expose bikeLocations through context
-        }}>
+        <Context.Provider
+            value={{
+                token, username, login, logout,
+                input, setInput, onSent, showResult,
+                loading, resultData, history, typingLock, newChat,
+                scheduleNum, seatModalOpen, setSeatModalOpen,
+                bikeLocations
+            }}
+        >
             {children}
         </Context.Provider>
     );
