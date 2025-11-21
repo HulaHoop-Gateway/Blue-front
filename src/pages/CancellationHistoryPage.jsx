@@ -95,9 +95,6 @@ const CancellationHistoryPage = () => {
 
       {/* 헤더 영역 */}
       <header className="reservation-history__header">
-        <p className="reservation-history__subtitle">
-          취소 및 환불된 내역을 확인할 수 있어요.
-        </p>
 
         {/* 상단 요약 카드 */}
         <div className="reservation-history__summary">
