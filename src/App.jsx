@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import MyPage from "./pages/MyPage";
+import ReservationHistoryPage from "./pages/ReservationHistoryPage";
+import UsageHistoryPage from "./pages/UsageHistoryPage";
+import CancellationHistoryPage from "./pages/CancellationHistoryPage";
 import Layout from "./components/Layout/Layout";
 import Main from "./components/Main/Main";
 
@@ -53,6 +56,9 @@ export default function App() {
             {/* Layout의 Outlet에서 렌더링될 컴포넌트들 */}
             <Route index element={<Main />} />
             <Route path="mypage" element={<MyPage token={token} onLogout={handleLogout} />} />
+            <Route path="reservation-history" element={<ReservationHistoryPage />} />
+            <Route path="usage-history" element={<UsageHistoryPage />} />
+            <Route path="cancellation-history" element={<CancellationHistoryPage />} />
           </Route>
         </Routes>
       </Router>

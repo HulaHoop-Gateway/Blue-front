@@ -13,6 +13,7 @@ import code_icon from './code_icon.png'
 import send_icon from './send_icon.png'
 import chatbot_icon from './chatbot_icon.svg'
 import cinema_icon from './cinema_icon.svg'
+import logout_icon from './logout_icon.png'
 
 export const assets = {
     history_icon,
@@ -29,5 +30,6 @@ export const assets = {
     code_icon,
     send_icon,
     chatbot_icon,
-    cinema_icon
+    cinema_icon,
+    logout_icon
 }
