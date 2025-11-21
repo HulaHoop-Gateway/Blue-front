@@ -97,9 +97,6 @@ const ReservationHistoryPage = () => {
 
       {/* 헤더 영역 */}
       <header className="reservation-history__header">
-        <p className="reservation-history__subtitle">
-          훌라후프 블루에서의 이동과 순간들을 한눈에 볼 수 있어요.
-        </p>
 
         {/* 상단 요약 카드 */}
         <div className="reservation-history__summary">
