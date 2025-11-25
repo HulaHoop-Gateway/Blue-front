@@ -9,8 +9,7 @@ const Main = () => {
     const {
         onSent, showResult, loading, resultData,
         setInput, input, history, typingLock,
-        scheduleNum, seatModalOpen, setSeatModalOpen,
-        bikeLocations // Get bikeLocations from context
+        scheduleNum, seatModalOpen, setSeatModalOpen
     } = useContext(Context);
 
     const chatContainerRef = useRef(null);
@@ -98,16 +97,15 @@ const Main = () => {
                                 ) : (
                                     <div className="result-data">
                                         <img src={assets.chatbot_icon} alt="" />
-                                        <p
-                                            style={{ whiteSpace: "pre-wrap" }}
-                                            dangerouslySetInnerHTML={{ __html: item.text }}
-                                        />
-                                    </div>
-                                )}
-                                {/* Render KakaoMap after the last AI message if bikeLocations are present */}
-                                {item.type === 'ai' && index === history.length - 1 && bikeLocations && bikeLocations.length > 0 && (
-                                    <div className="kakao-map-display">
-                                        <KakaoMap key={JSON.stringify(bikeLocations)} />
+                                        <div>
+                                            <p
+                                                style={{ whiteSpace: "pre-wrap" }}
+                                                dangerouslySetInnerHTML={{ __html: item.text }}
+                                            />
+                                            {item.bikeData && item.bikeData.length > 0 && (
+                                                <KakaoMap locations={item.bikeData} mapId={`map-${index}`} />
+                                            )}
+                                        </div>
                                     </div>
                                 )}
                             </React.Fragment>
@@ -165,5 +163,4 @@ const Main = () => {
         </div>
     );
 };
-
 export default Main;

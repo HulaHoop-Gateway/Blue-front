@@ -1,86 +1,94 @@
-import React, { useEffect, useState, useContext, useRef } from 'react';
-import { Context } from '../../context/Context'; // Import Context
+import React, { useEffect, useState, useRef, memo } from 'react';
 
-const KakaoMap = () => {
-  const { bikeLocations } = useContext(Context);
-  const [mapCenter] = useState({ latitude: 33.450701, longitude: 126.570667 }); // Default to Jeju Island, no longer dynamic from internal fetch
-
-  const mapRef = useRef(null);
+const KakaoMap = ({ locations }) => {
+  const mapContainerRef = useRef(null); // Ref for the div where the map will be rendered
+  const mapInstanceRef = useRef(null);  // Ref to store the map instance
   const [scriptLoaded, setScriptLoaded] = useState(false);
-  const markersRef = useRef([]); // To keep track of current markers
 
   // Effect for loading the Kakao Map API script only once
   useEffect(() => {
+    if (window.kakao && window.kakao.maps) {
+      setScriptLoaded(true);
+      return;
+    }
     const script = document.createElement('script');
     script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${import.meta.env.VITE_KAKAO_APP_KEY}&autoload=false`;
     script.async = true;
     document.head.appendChild(script);
-
     script.onload = () => {
       window.kakao.maps.load(() => {
         setScriptLoaded(true);
       });
     };
+  }, []);
 
-    return () => {
-      document.head.removeChild(script);
-    };
-  }, []); // Empty dependency array means it runs once on mount
-
-  // Effect for map initialization and marker management
+  // Main effect for map creation and updates
   useEffect(() => {
-    if (!scriptLoaded) return;
-
-    const container = document.getElementById('map');
-    if (!container) return; // Ensure container exists
-
-    if (!mapRef.current) { // Initialize map only once
-      const options = {
-        center: new window.kakao.maps.LatLng(mapCenter.latitude, mapCenter.longitude),
-        level: 3,
-      };
-      mapRef.current = new window.kakao.maps.Map(container, options);
+    // Exit if the script isn't loaded or the container isn't ready
+    if (!scriptLoaded || !mapContainerRef.current) {
+      return;
     }
 
-    // Clear existing markers
-    markersRef.current.forEach(marker => marker.setMap(null));
-    markersRef.current = [];
+    // Create map instance only once
+    if (!mapInstanceRef.current) {
+      const options = {
+        center: new window.kakao.maps.LatLng(33.450701, 126.570667),
+        level: 3,
+      };
+      mapInstanceRef.current = new window.kakao.maps.Map(mapContainerRef.current, options);
+    }
 
-    // Add new markers for bike locations
-    if (bikeLocations && bikeLocations.length > 0) {
-      const bounds = new window.kakao.maps.LatLngBounds(); // To adjust map bounds
+    const map = mapInstanceRef.current;
+    
+    // Create bounds object to reposition map
+    if (locations && locations.length > 0) {
+      const bounds = new window.kakao.maps.LatLngBounds();
 
-      bikeLocations.forEach(bike => {
+      locations.forEach(bike => {
         const markerPosition = new window.kakao.maps.LatLng(bike.latitude, bike.longitude);
         const marker = new window.kakao.maps.Marker({
           position: markerPosition,
-          map: mapRef.current,
+          map: map,
         });
-        markersRef.current.push(marker); // Store marker reference
 
         const infowindow = new window.kakao.maps.InfoWindow({
           content: `<div style="padding:5px;font-size:12px;">${bike.bicycleCode} (${bike.bicycleType}) - ${bike.status}</div>`
         });
 
         window.kakao.maps.event.addListener(marker, 'click', function() {
-          infowindow.open(mapRef.current, marker);
+          infowindow.open(map, marker);
         });
 
-        bounds.extend(markerPosition); // Extend bounds for each marker
+        bounds.extend(markerPosition);
       });
 
-      // Center map to show all markers
-      mapRef.current.setBounds(bounds);
-    } else {
-      // If no bike locations, reset to default center
-      mapRef.current.setCenter(new window.kakao.maps.LatLng(mapCenter.latitude, mapCenter.longitude));
+      // Set map bounds to show all markers
+      map.setBounds(bounds);
     }
 
-  }, [scriptLoaded, bikeLocations, mapCenter]); // Dependencies for map and marker updates
+    // Use ResizeObserver to call relayout when the container size changes
+    const observer = new ResizeObserver(() => {
+      map.relayout();
+    });
+    
+    if (mapContainerRef.current) {
+      observer.observe(mapContainerRef.current);
+    }
+
+    // Cleanup observer on unmount
+    return () => {
+      observer.disconnect();
+    };
+
+  }, [scriptLoaded, locations]); // Rerun when script is loaded or locations change
 
   return (
-    <div id="map" style={{ width: '100%', height: '500px' }}></div>
+    // Outer div for styling and layout (shadows, border-radius, etc.)
+    <div className="kakao-map-display">
+      {/* Inner div is the clean target for the Kakao Maps API */}
+      <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
+    </div>
   );
 };
 
-export default KakaoMap;
+export default memo(KakaoMap);

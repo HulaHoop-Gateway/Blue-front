@@ -220,10 +220,11 @@
 }
 
 .kakao-map-display {
-    margin: 20px 0; /* Add some vertical margin */
-    width: 100%; /* Take full width of its parent */
-    max-width: 600px; /* Optional: limit max width for better readability */
-    height: 400px; /* Fixed height for the map container */
+    margin-top: 20px; /* Increased top margin for better visual separation */
+    width: 100%; /* Corrected width to fix map rendering 'holes' */
+    max-width: unset; /* Remove max-width constraint to allow it to be as wide as possible */
+    height: 400px; /* Reduced height to prevent it from being too long vertically */
+    min-height: 400px; /* Ensure container never collapses */
     border-radius: 10px; /* Optional: rounded corners */
     overflow: hidden; /* Ensures map content stays within bounds */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional: subtle shadow */

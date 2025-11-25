@@ -1,25 +1,51 @@
 // src/pages/CancellationHistoryPage.jsx
 import React, { useState, useEffect } from "react";
+import axios from "axios";                 // 👈 추가: member/info용
 import axiosInstance from "../api/axiosInstance";
 import "./CancellationHistoryPage.css";
 
 const CancellationHistoryPage = () => {
-  // TODO: 실제로는 로그인한 사용자 정보에서 memberCode 받아오는 로직으로 교체
-  const memberCode = "U000000001";
-
   const [histories, setHistories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // 👇 회원 정보 상태
+  const [memberCode, setMemberCode] = useState("");
+  const [memberName, setMemberName] = useState("");
+
   useEffect(() => {
-    const fetchHistory = async () => {
+    const fetchMemberAndHistory = async () => {
       try {
         setLoading(true);
         setError("");
 
-        const response = await axiosInstance.get(`/api/history/${memberCode}`, {
-          params: { status: "R" }, // 취소/환불 내역만
-        });
+        // 1) 토큰 가져오기
+        const token = localStorage.getItem("user_jwt");
+        if (!token) {
+          setError("로그인이 필요합니다.");
+          setLoading(false);
+          return;
+        }
+
+        // 2) 회원 정보 가져오기
+        const memberRes = await axios.get(
+          "http://localhost:8090/api/member/info",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        const { memberCode, name } = memberRes.data;
+        setMemberCode(memberCode);
+        setMemberName(name);
+
+        // 3) 취소/환불 내역 가져오기 (status=R)
+        const response = await axiosInstance.get(
+          `/api/history/${memberCode}`,
+          {
+            params: { status: "R" }, // 취소/환불 내역만
+          }
+        );
 
         setHistories(response.data || []);
       } catch (err) {
@@ -30,8 +56,8 @@ const CancellationHistoryPage = () => {
       }
     };
 
-    fetchHistory();
-  }, [memberCode]);
+    fetchMemberAndHistory();
+  }, []); // 🔹 최초 한 번만 실행
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -62,8 +88,6 @@ const CancellationHistoryPage = () => {
     return status || "";
   };
 
-  const memberName = histories.length > 0 ? histories[0].memberName : "";
-
   const totalRefundAmount = histories.reduce(
     (sum, item) => sum + (item.amountUsed || 0),
     0
@@ -79,11 +103,11 @@ const CancellationHistoryPage = () => {
   }, "");
 
   return (
-    <div className="reservation-history">
-      <h2 className="reservation-history__top-left-title">
+    <div className="cancellation-history">
+      <h2 className="cancellation-history__top-left-title">
         {memberName ? (
           <>
-            <span className="reservation-history__title-highlight">
+            <span className="cancellation-history__title-highlight">
               {memberName}
             </span>
             님의 취소 내역
@@ -94,10 +118,9 @@ const CancellationHistoryPage = () => {
       </h2>
 
       {/* 헤더 영역 */}
-      <header className="reservation-history__header">
-
+      <header className="cancellation-history__header">
         {/* 상단 요약 카드 */}
-        <div className="reservation-history__summary">
+        <div className="cancellation-history__summary">
           <div className="summary-card">
             <span className="summary-card__label">총 취소</span>
             <strong className="summary-card__value">
@@ -120,56 +143,56 @@ const CancellationHistoryPage = () => {
       </header>
 
       {/* 본문 영역 */}
-      <main className="reservation-history__body">
+      <main className="cancellation-history__body">
         {loading && (
-          <p className="reservation-history__message">
+          <p className="cancellation-history__message">
             취소 내역을 불러오는 중입니다...
           </p>
         )}
 
         {!loading && error && (
-          <p className="reservation-history__message reservation-history__message--error">
+          <p className="cancellation-history__message cancellation-history__message--error">
             {error}
           </p>
         )}
 
         {!loading && !error && histories.length === 0 && (
-          <p className="reservation-history__message">
+          <p className="cancellation-history__message">
             취소 내역이 없어요.
           </p>
         )}
 
         {!loading && !error && histories.length > 0 && (
-          <section className="reservation-history__list-wrapper">
-            <div className="reservation-history__list-header">
-              <span className="reservation-history__list-title">
+          <section className="cancellation-history__list-wrapper">
+            <div className="cancellation-history__list-header">
+              <span className="cancellation-history__list-title">
                 취소 내역 {cancellationCount}건
               </span>
-              <span className="reservation-history__list-caption">
+              <span className="cancellation-history__list-caption">
                 최근 취소 순으로 정렬되어 있어요.
               </span>
             </div>
 
-            <ul className="reservation-history__list">
+            <ul className="cancellation-history__list">
               {histories.map((item, index) => (
                 <li
                   key={item.transactionNum || index}
-                  className="reservation-history__item"
+                  className="cancellation-history__item"
                 >
                   {/* 상단: 상호명 / 날짜 / 금액 / 상태 */}
-                  <div className="reservation-history__item-main">
-                    <div className="reservation-history__item-left">
-                      <div className="reservation-history__merchant-row">
-                        <span className="reservation-history__merchant">
+                  <div className="cancellation-history__item-main">
+                    <div className="cancellation-history__item-left">
+                      <div className="cancellation-history__merchant-row">
+                        <span className="cancellation-history__merchant">
                           {item.merchantName}
                         </span>
                       </div>
-                      <div className="reservation-history__meta-row">
-                        <span className="reservation-history__meta">
+                      <div className="cancellation-history__meta-row">
+                        <span className="cancellation-history__meta">
                           취소일 · {formatDate(item.paymentDate)}
                         </span>
                         {formatPeriod(item.startDate, item.endDate) && (
-                          <span className="reservation-history__meta">
+                          <span className="cancellation-history__meta">
                             이용기간 ·{" "}
                             {formatPeriod(item.startDate, item.endDate)}
                           </span>
@@ -177,12 +200,12 @@ const CancellationHistoryPage = () => {
                       </div>
                     </div>
 
-                    <div className="reservation-history__item-right">
-                      <span className="reservation-history__amount">
+                    <div className="cancellation-history__item-right">
+                      <span className="cancellation-history__amount">
                         {formatAmount(item.amountUsed)}
                       </span>
                       <span
-                        className={`reservation-history__status reservation-history__status--${
+                        className={`cancellation-history__status cancellation-history__status--${
                           (item.status || "").toLowerCase()
                         }`}
                       >
@@ -191,10 +214,11 @@ const CancellationHistoryPage = () => {
                     </div>
                   </div>
 
-                  {/* 하단: 회원 / 예약번호 / 액션 */}
-                  <div className="reservation-history__item-footer">
-                    <div className="reservation-history__footer-right">
-                      <span className="reservation-history__transaction">
+                  {/* 하단: 예약번호 */}
+                  <div className="cancellation-history__item-footer">
+                    <div className="cancellation-history__footer-left">
+                      <span className="cancellation-history__transaction-label">거래번호: </span>
+                      <span className="cancellation-history__transaction">
                         {formatTransactionNum(item.transactionNum)}
                       </span>
                     </div>
