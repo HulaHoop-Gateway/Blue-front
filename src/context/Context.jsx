@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect } from "react";
 import axiosInstance from "../api/axiosInstance";
 import React from "react";
+import { loadPaymentWidget } from "@tosspayments/payment-widget-sdk";
 
 export const Context = createContext();
 
@@ -14,6 +15,13 @@ export const ContextProvider = ({ token, setToken, children }) => {
     const [typingLock, setTypingLock] = useState(false);
 
     const [scheduleNum, setScheduleNum] = useState(null);
+    const [seatModalOpen, setSeatModalOpen] = useState(false);
+    const [bikeLocations, setBikeLocations] = useState([]);
+
+    // ✨ 결제에 필요한 상태 추가
+    const [paymentAmount, setPaymentAmount] = useState(null);
+    const [paymentPhone, setPaymentPhone] = useState(null);
+    const [actionType, setActionType] = useState(null);
 
     /** ------------------------
      *  🔐 로그인 / 로그아웃
@@ -46,6 +54,44 @@ export const ContextProvider = ({ token, setToken, children }) => {
         setTimeout(() => setResultData(prev => prev + w), 75 * i);
     };
 
+    // ✅ 토스페이먼츠 결제 요청 함수
+    const requestTossPayment = async (amount, phoneNumber, onSuccess, onError) => {
+        try {
+            const widget = await loadPaymentWidget(
+                import.meta.env.VITE_TOSS_CLIENT_KEY,
+                phoneNumber || "GUEST"
+            );
+
+            const orderId = crypto.randomUUID();
+
+            const result = await widget.requestPayment({
+                orderId,
+                orderName: "자전거 대여 결제",
+                amount
+            });
+
+            await axiosInstance.post("/api/payments/confirm", {
+                paymentKey: result.paymentKey,
+                orderId: result.orderId,
+                amount: result.amount
+            });
+
+            if (onSuccess) {
+                onSuccess();
+            }
+        } catch (error) {
+            console.error("🔥 결제 실패:", error);
+
+            if (error.code === "USER_CANCEL" || error.message?.includes("cancel")) {
+                return;
+            }
+
+            if (onError) {
+                onError(error);
+            }
+        }
+    };
+
     /** ------------------------
      *  🧹 newChat(): 세션 초기화
      * ------------------------ */
@@ -71,6 +117,12 @@ export const ContextProvider = ({ token, setToken, children }) => {
         setTypingLock(false);
         setScheduleNum(null);
         setSeatModalOpen(false);
+        setBikeLocations([]);
+
+        // ✨ 결제 정보 초기화
+        setPaymentAmount(null);
+        setPaymentPhone(null);
+        setActionType(null);
     };
 
     /** token이 변하면(로그인/로그아웃) newChat 실행 */
@@ -141,6 +193,40 @@ export const ContextProvider = ({ token, setToken, children }) => {
             const aiText = res.data?.result || res.data?.message;
             if (!aiText) return;
 
+            // ✅ JSON 응답에서 정보 추출
+            let extractedActionType = null;
+            let extractedAmount = null;
+            let extractedPhone = null;
+
+            // JSON 형식으로 파싱 시도
+            try {
+                const jsonMatch = aiText.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    const jsonData = JSON.parse(jsonMatch[0]);
+                    extractedActionType = jsonData.actionType || null;
+                    extractedAmount = jsonData.amount ? Number(jsonData.amount) : null;
+                    extractedPhone = jsonData.phone ? String(jsonData.phone).replace(/-/g, '') : null;
+                }
+            } catch (e) {
+                // JSON 파싱 실패 시 정규식으로 추출
+            }
+
+            // 정규식으로도 추출 시도
+            if (!extractedActionType) {
+                const matchActionType = aiText.match(/"actionType"\s*:\s*"([^"]+)"/i);
+                extractedActionType = matchActionType ? matchActionType[1] : null;
+            }
+
+            if (!extractedAmount) {
+                const matchAmount = aiText.match(/"amount"\s*:\s*([0-9]+)/i);
+                extractedAmount = matchAmount ? Number(matchAmount[1]) : null;
+            }
+
+            if (!extractedPhone) {
+                const matchPhone = aiText.match(/"phone"\s*:\s*([\d\-]+)/i);
+                extractedPhone = matchPhone ? matchPhone[1].replace(/-/g, '') : null;
+            }
+
             /** scheduleNum 추출 */
             const match =
                 aiText.match(/"scheduleNum"\s*:\s*([0-9]+)/i) ||
@@ -148,6 +234,23 @@ export const ContextProvider = ({ token, setToken, children }) => {
                 aiText.match(/<!--\s*scheduleNum\s*:\s*([0-9]+)\s*-->/i);
 
             if (match) setScheduleNum(Number(match[1]));
+
+            // 상태 업데이트
+            if (extractedAmount) setPaymentAmount(extractedAmount);
+            if (extractedPhone) setPaymentPhone(extractedPhone);
+            if (extractedActionType) {
+                setActionType(extractedActionType);
+                if (extractedActionType === 'OPEN_SEAT_MODAL') {
+                    setSeatModalOpen(true);
+                }
+            }
+
+            // 사용자 입력에 "상세"와 "좌석"이 포함되어 있으면 모달 오픈
+            if (text.includes("상세") && text.includes("좌석")) {
+                setSeatModalOpen(true);
+            }
+
+            setBikeLocations([]);
 
             let modified = aiText
                 .split("**")
@@ -159,7 +262,14 @@ export const ContextProvider = ({ token, setToken, children }) => {
             words.forEach((word, i) => delayPara(i, word + " "));
 
             setTimeout(() => {
-                setHistory(prev => [...prev, { type: "ai", text: modified }]);
+                // history에 actionType 정보 포함
+                setHistory(prev => [...prev, {
+                    type: "ai",
+                    text: modified,
+                    action: extractedActionType || undefined,
+                    amount: extractedAmount || undefined,
+                    phone: extractedPhone || undefined
+                }]);
                 setResultData("");
                 setLoading(false);
                 setTypingLock(false);
@@ -177,8 +287,13 @@ export const ContextProvider = ({ token, setToken, children }) => {
             value={{
                 token, username, login, logout,
                 input, setInput, onSent, showResult,
-                loading, resultData, history, typingLock, newChat,
-                scheduleNum
+                loading, resultData, history, setHistory, typingLock, newChat,
+                scheduleNum, seatModalOpen, setSeatModalOpen,
+                bikeLocations, setBikeLocations,
+                paymentAmount, setPaymentAmount,
+                paymentPhone, setPaymentPhone,
+                actionType, setActionType,
+                requestTossPayment
             }}
         >
             {children}
