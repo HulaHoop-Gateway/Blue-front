@@ -14,8 +14,6 @@ export const ContextProvider = ({ token, setToken, children }) => {
     const [typingLock, setTypingLock] = useState(false);
 
     const [scheduleNum, setScheduleNum] = useState(null);
-    const [seatModalOpen, setSeatModalOpen] = useState(false);
-    const [bikeLocations, setBikeLocations] = useState([]);
 
     /** ------------------------
      *  🔐 로그인 / 로그아웃
@@ -73,7 +71,6 @@ export const ContextProvider = ({ token, setToken, children }) => {
         setTypingLock(false);
         setScheduleNum(null);
         setSeatModalOpen(false);
-        setBikeLocations([]);
     };
 
     /** token이 변하면(로그인/로그아웃) newChat 실행 */
@@ -131,9 +128,8 @@ export const ContextProvider = ({ token, setToken, children }) => {
             /** 🚲 자전거 처리 */
             if (res.data && Array.isArray(res.data.bicycles)) {
                 const bikes = res.data.bicycles;
-                setBikeLocations(bikes);
 
-                const summary = `🚲 ${bikes.length}대의 자전거를 찾았습니다. 지도에 표시됩니다.`;
+                const summary = `🚲 ${bikes.length}대의 자전거를 찾았습니다. 지도에서 확인하세요.`;
                 setHistory(prev => [...prev, { type: "ai", text: summary, bikeData: bikes }]);
 
                 setResultData("");
@@ -152,8 +148,6 @@ export const ContextProvider = ({ token, setToken, children }) => {
                 aiText.match(/<!--\s*scheduleNum\s*:\s*([0-9]+)\s*-->/i);
 
             if (match) setScheduleNum(Number(match[1]));
-
-            setBikeLocations([]);
 
             let modified = aiText
                 .split("**")
@@ -184,8 +178,7 @@ export const ContextProvider = ({ token, setToken, children }) => {
                 token, username, login, logout,
                 input, setInput, onSent, showResult,
                 loading, resultData, history, typingLock, newChat,
-                scheduleNum, seatModalOpen, setSeatModalOpen,
-                bikeLocations
+                scheduleNum
             }}
         >
             {children}

@@ -28,7 +28,7 @@
 
 .reservation-history__top-left-title {
   position: absolute;
-  top: 32px;
+  top: 20px;
   left: 24px;
   font-size: 22px;
   font-weight: 700;
@@ -260,9 +260,15 @@
   border-color: rgba(255, 123, 123, 0.2);
 }
 
+.reservation-history__status--p {
+  background-color: rgba(100, 220, 150, 0.1);
+  color: #89FFC5;
+  border-color: rgba(100, 220, 150, 0.2);
+}
+
 .reservation-history__item-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   gap: 8px;
   margin-top: 4px;
@@ -270,10 +276,34 @@
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.reservation-history__cancel-button {
+  background-color: rgba(255, 123, 123, 0.15);
+  color: #ff9a9a;
+  border: 1px solid rgba(255, 123, 123, 0.2);
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.reservation-history__cancel-button:hover {
+  background-color: rgba(255, 123, 123, 0.3);
+  color: #ffc2c2;
+  border-color: rgba(255, 123, 123, 0.4);
+}
+
 .reservation-history__footer-right {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.reservation-history__transaction-label {
+  font-size: 13px;
+  color: var(--mist-gray);
+  font-weight: 500;
 }
 
 .reservation-history__transaction {
