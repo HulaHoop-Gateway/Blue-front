@@ -3,7 +3,8 @@ import './Main.css';
 import { assets } from '../../assets/assets';
 import { Context } from '../../context/Context';
 import SeatModal from "../Seat/SeatModal";
-import KakaoMap from "../KakaoMap/KakaoMap"; // Import KakaoMap component
+import KakaoMap from "../KakaoMap/KakaoMap";
+import InlinePaymentButton from "../Payment/InlinePaymentButton";
 
 const Main = () => {
     const {
@@ -57,34 +58,34 @@ const Main = () => {
             <div className="main-container">
                 {!showResult ? (
                     <>
-                    <div className='card-view-scroll-container'>
+                        <div className='card-view-scroll-container'>
 
-                        <div className="greet">
-                            <p><span>안녕하세요!</span></p>
-                            <p>예약하시고 싶은 것을 말씀해주세요!</p>
-                        </div>
+                            <div className="greet">
+                                <p><span>안녕하세요!</span></p>
+                                <p>예약하시고 싶은 것을 말씀해주세요!</p>
+                            </div>
 
-                        <div className="cards">
-                            <div>
-                                <div className='card-top'>
-                                    <img src={assets.cinema_icon} alt="영화관 아이콘" />
-                                    <p>영화관</p>
+                            <div className="cards">
+                                <div>
+                                    <div className='card-top'>
+                                        <img src={assets.cinema_icon} alt="영화관 아이콘" />
+                                        <p>영화관</p>
+                                    </div>
+                                    <div className="card">
+                                        <p>영화관 지점을 말하면 AI가 상영 정보와 스케줄을 안내합니다.</p>
+                                    </div>
                                 </div>
-                                <div className="card">
-                                    <p>영화관 지점을 말하면 AI가 상영 정보와 스케줄을 안내합니다.</p>
+                                <div>
+                                    <div className="card-top">
+                                        <img src={assets.compass_icon} alt="자전거 아이콘" />
+                                        <p>자전거</p>
+                                    </div>
+                                    <div className="card">
+                                        <p>예약하시고 싶은 자전거를 말씀해주세요!</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div>
-                                <div className="card-top">
-                                <img src={assets.compass_icon} alt="자전거 아이콘" />
-                                <p>자전거</p>
-                                </div>
-                                <div className="card">
-                                    <p>예약하시고 싶은 자전거를 말씀해주세요!</p>
-                                </div>
-                            </div>
                         </div>
-                    </div>
                     </>
                 ) : (
                     <div className='result' ref={chatContainerRef}>
@@ -108,6 +109,22 @@ const Main = () => {
                                         </div>
                                     </div>
                                 )}
+
+                                {/* ✅ 결제 버튼 렌더링 */}
+                                {item.type === 'ai' &&
+                                    item.action === 'PAYMENT_CONFIRM' &&
+                                    item.amount && (
+                                        <div className="result-data">
+                                            <InlinePaymentButton
+                                                amount={item.amount}
+                                                phoneNumber={item.phone}
+                                                orderName="영화 예매 결제"
+                                                onSuccess={() => {
+                                                    onSent("결제 완료");
+                                                }}
+                                            />
+                                        </div>
+                                    )}
                             </React.Fragment>
                         ))}
 
