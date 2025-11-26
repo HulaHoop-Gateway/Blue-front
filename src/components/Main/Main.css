@@ -1,4 +1,4 @@
-.main{
+.main {
     flex: 1;
     min-height: 100vh;
     padding-bottom: 15vh;
@@ -6,7 +6,7 @@
     background-color: #1F1E31;
 }
 
-.main .nav{
+.main .nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -15,18 +15,18 @@
     color: #585858;
 }
 
-.main .nav img{
+.main .nav img {
     width: 40px;
     border-radius: 50%;
 
 }
 
-.main-container{
+.main-container {
     max-width: 900px;
     margin: auto;
 }
 
-.main .greet{
+.main .greet {
     margin: 50px 0px;
     font-size: 56px;
     color: #c4c7c5;
@@ -34,38 +34,65 @@
     padding: 20px;
 }
 
-.main .greet span{
-    background: -webkit-linear-gradient(16deg,#4b90ff,#ff5546);
+.main .greet span {
+    background: -webkit-linear-gradient(16deg, #4b90ff, #ff5546);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 
-.main .cards{
+.main .cards {
     display: grid;
     gap: 15px;
-    grid-template-columns: repeat(auto-fill,minmax(300px,1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     padding: 20px;
-    
+
 }
 
 .card-top {
-  display: flex; 
-  align-items: center; 
-  align-content: center;
-  margin-bottom: 12px;
-  gap: 10px;
+    display: flex;
+    align-items: center;
+    align-content: center;
+    margin-bottom: 12px;
+    gap: 10px;
 }
 
 .card-top p {
-  /* 글자 크기 키우기 (예시: 20px) */
-  font-size: 30px; 
-  /* 글자 굵기 키우기 (예시: bold 또는 700) */
-  font-weight: bold; 
-  /* p 태그의 기본 마진(margin)을 제거하여 정렬에 방해되지 않도록 합니다. */
-  margin: 0; 
+    /* 글자 크기 키우기 (예시: 20px) */
+    font-size: 30px;
+    /* 글자 굵기 키우기 (예시: bold 또는 700) */
+    font-weight: bold;
+    /* p 태그의 기본 마진(margin)을 제거하여 정렬에 방해되지 않도록 합니다. */
+    margin: 0;
 }
-.main .cards img{
+
+.kakao-map-display {
+    width: 100% !important;
+    max-width: 600px !important;
+    height: 450px !important;
+    margin: 15px 0 !important;
+    background-color: #e9ecef !important;
+    display: block !important;
+
+    /* ✅ 스타일 단순화: 둥근 모서리와 overflow 제거 */
+    border-radius: 0 !important;
+    overflow: visible !important;
+
+    /* ✅ 부모 transform 영향 차단 */
+    transform: none !important;
+    will-change: auto !important;
+
+    /* ✅ 격리 */
+    isolation: isolate !important;
+
+    /* ✅ clip-path와 mask 차단 */
+    clip-path: none !important;
+    -webkit-clip-path: none !important;
+    mask: none !important;
+    -webkit-mask: none !important;
+}
+
+.main .cards img {
     width: 36px;
     padding: 5px;
     background-color: #EAECEF;
@@ -73,7 +100,8 @@
     bottom: 10px;
     right: 10px;
 }
-.main .card{
+
+.main .card {
     height: 150px;
     padding: 15px;
     background-color: #363E47;
@@ -83,16 +111,16 @@
 }
 
 
-.main .card p{
+.main .card p {
     color: #d3baba;
     font-size: 17px;
 }
 
-.main .card:hover{
+.main .card:hover {
     background-color: #2d333b;
 }
 
-.main-bottom{
+.main-bottom {
     position: absolute;
     bottom: 0;
     width: 100%;
@@ -102,7 +130,7 @@
     padding-bottom: 30px;
 }
 
-.search-box{
+.search-box {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -112,7 +140,7 @@
     border-radius: 50px;
 }
 
-.search-box img{
+.search-box img {
     width: 38px;
     padding: 8px;
     border-radius: 20px;
@@ -120,12 +148,12 @@
     transition: all 0.5s ease-in-out;
 }
 
-.search-box img:hover{
-     background: rgba(255, 255, 255, 0.12);
+.search-box img:hover {
+    background: rgba(255, 255, 255, 0.12);
     transition: all 0.3s ease-in-out;
 }
 
-.search-box input{
+.search-box input {
     color: white;
     flex: 1;
     background-color: transparent;
@@ -135,7 +163,7 @@
     font-size: 18px;
 }
 
-.search-box div{
+.search-box div {
     display: flex;
     align-items: center;
     gap: 5px;
@@ -150,85 +178,96 @@
 }
 
 .card-view-scroll-container {
-    max-height: 80vh; /* .result와 동일한 높이 제한 */
-    overflow-y: auto; /* 내용이 넘칠 때만 스크롤바 표시 (auto가 더 자연스러움) */
-    
+    max-height: 80vh;
+    /* .result와 동일한 높이 제한 */
+    overflow-y: auto;
+    /* 내용이 넘칠 때만 스크롤바 표시 (auto가 더 자연스러움) */
+
     /* .result의 스크롤바 숨김 처리를 동일하게 적용 */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE */
 }
 
 .card-view-scroll-container::-webkit-scrollbar {
-    display: none; /* Chrome, Safari */
+    display: none;
+    /* Chrome, Safari */
 }
 
 
-.result::-webkit-scrollbar{
+.result::-webkit-scrollbar {
     display: none;
 }
 
-.result-title{
+.result-title {
     margin: 40px 0px;
     display: flex;
     align-items: center;
-    gap:20px;
-    align-self: flex-end;   
+    gap: 20px;
+    align-self: flex-end;
 }
 
 
-.result img {
+.result .avatar {
     width: 40px;
     border-radius: 50%;
 }
 
-.result-data{
+.result-data {
     display: flex;
     align-items: start;
     gap: 20px;
 }
 
-.loader{
+.loader {
     width: 100%;
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.loader hr{
+.loader hr {
     border-radius: 4px;
-    border:  none;
+    border: none;
     background-color: #f6f7f8;
-    background: linear-gradient(to right,#9ed7ff,#ffffff,#9ed7ff);
+    background: linear-gradient(to right, #9ed7ff, #ffffff, #9ed7ff);
     background-size: 800px 50px;
     height: 20px;
     animation: loader 3s infinite linear;
 }
 
-@keyframes loader{
-    0%{
+@keyframes loader {
+    0% {
         background-position: -800px;
     }
-    100%{
+
+    100% {
         background-position: 800px 0px;
     }
 }
 
-.result-data p{
+.result-data p {
     font-size: 17px;
     font-weight: 300;
     line-height: 1.8;
 }
 
 .kakao-map-display {
-    margin-top: 20px; /* Increased top margin for better visual separation */
-    width: 100%; /* Corrected width to fix map rendering 'holes' */
-    max-width: unset; /* Remove max-width constraint to allow it to be as wide as possible */
-    height: 400px; /* Reduced height to prevent it from being too long vertically */
-    min-height: 400px; /* Ensure container never collapses */
-    border-radius: 10px; /* Optional: rounded corners */
-    overflow: hidden; /* Ensures map content stays within bounds */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional: subtle shadow */
+    margin-top: 20px;
+    /* Increased top margin for better visual separation */
+    width: 100%;
+    /* Corrected width to fix map rendering 'holes' */
+    max-width: unset;
+    /* Remove max-width constraint to allow it to be as wide as possible */
+    height: 400px;
+    /* Reduced height to prevent it from being too long vertically */
+    min-height: 400px;
+    /* Ensure container never collapses */
+    border-radius: 10px;
+    /* Optional: rounded corners */
+    overflow: hidden;
+    /* Ensures map content stays within bounds */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* Optional: subtle shadow */
 }
-
-
-

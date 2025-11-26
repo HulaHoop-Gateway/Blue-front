@@ -10,7 +10,8 @@ const Main = () => {
     const {
         onSent, showResult, loading, resultData,
         setInput, input, history, typingLock,
-        scheduleNum, seatModalOpen, setSeatModalOpen
+        scheduleNum, seatModalOpen, setSeatModalOpen,
+        bikeLocations, cinemaLocations
     } = useContext(Context);
 
     const chatContainerRef = useRef(null);
@@ -97,15 +98,22 @@ const Main = () => {
                                     </div>
                                 ) : (
                                     <div className="result-data">
-                                        <img src={assets.chatbot_icon} alt="" />
-                                        <div>
+                                        <img src={assets.chatbot_icon} alt="" className="avatar" />
+                                        <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
+                                            {/* 🎬 영화관 지도 표시 (메시지 위에) */}
+                                            {item.cinemaData && item.cinemaData.length > 0 && (
+                                                <KakaoMap locations={item.cinemaData} mapId={`cinema-map-${index}`} />
+                                            )}
+
+                                            {/* 🚲 자전거 지도 표시 (메시지 위에) */}
+                                            {item.bikeData && item.bikeData.length > 0 && (
+                                                <KakaoMap locations={item.bikeData} mapId={`bike-map-${index}`} />
+                                            )}
+
                                             <p
                                                 style={{ whiteSpace: "pre-wrap" }}
                                                 dangerouslySetInnerHTML={{ __html: item.text }}
                                             />
-                                            {item.bikeData && item.bikeData.length > 0 && (
-                                                <KakaoMap locations={item.bikeData} mapId={`map-${index}`} />
-                                            )}
                                         </div>
                                     </div>
                                 )}
@@ -118,7 +126,7 @@ const Main = () => {
                                             <InlinePaymentButton
                                                 amount={item.amount}
                                                 phoneNumber={item.phone}
-                                                orderName="영화 예매 결제"
+                                                orderName={item.paymentType === 'BICYCLE' ? '자전거 대여 결제' : '영화 예매 결제'}
                                                 onSuccess={() => {
                                                     onSent("결제 완료");
                                                 }}
@@ -128,19 +136,32 @@ const Main = () => {
                             </React.Fragment>
                         ))}
 
-                        {loading && (
+                        {/* 로딩 중이거나 타이핑 중일 때 표시 */}
+                        {(loading || resultData) && (
                             <div className="result-data">
-                                <img src={assets.chatbot_icon} alt="" />
-                                {resultData ? (
-                                    <p
-                                        style={{ whiteSpace: "pre-wrap" }}
-                                        dangerouslySetInnerHTML={{ __html: resultData }}
-                                    />
-                                ) : (
-                                    <div className='loader'>
-                                        <hr /><hr /><hr />
-                                    </div>
-                                )}
+                                <img src={assets.chatbot_icon} alt="" className="avatar" />
+                                <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
+                                    {/* 🎬 타이핑 중 영화관 지도 표시 */}
+                                    {cinemaLocations && cinemaLocations.length > 0 && (
+                                        <KakaoMap locations={cinemaLocations} mapId="temp-cinema-map" />
+                                    )}
+
+                                    {/* 🚲 타이핑 중 자전거 지도 표시 */}
+                                    {bikeLocations && bikeLocations.length > 0 && (
+                                        <KakaoMap locations={bikeLocations} mapId="temp-bike-map" />
+                                    )}
+
+                                    {loading ? (
+                                        <div className='loader'>
+                                            <hr /><hr /><hr />
+                                        </div>
+                                    ) : (
+                                        <p
+                                            style={{ whiteSpace: "pre-wrap" }}
+                                            dangerouslySetInnerHTML={{ __html: resultData }}
+                                        />
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>

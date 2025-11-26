@@ -28,18 +28,18 @@ export default function SeatModal({ open, onClose, scheduleNum, userId }) {
     }
 
     try {
+      // ❌ DB 저장 로직 제거 (결제 완료 시점에 저장)
+      /*
       for (const seat of selectedSeats) {
         await axiosInstance.post("/api/movies/book-seat", {
           scheduleNum,
           seatCode: seat.seatCode,
         });
       }
+      */
 
-      // ✅ DB 저장 성공
-      alert("✅ 좌석 예약 완료!");
-
-      // ✅ 좌석 최신화
-      window.refreshSeats?.();
+      // ✅ 좌석 선택 완료 알림
+      // alert("✅ 좌석 선택 완료! 결제를 진행해주세요.");
 
       // ✅ AI 시나리오로 전달
       const seatNames = selectedSeats.map(s => s.row + s.col).join(" ");
@@ -49,7 +49,7 @@ export default function SeatModal({ open, onClose, scheduleNum, userId }) {
       onClose();
 
     } catch (err) {
-      alert("❌ 예약 실패: " + err.response?.data);
+      alert("❌ 좌석 선택 처리 중 오류 발생: " + err.message);
     }
   };
 
