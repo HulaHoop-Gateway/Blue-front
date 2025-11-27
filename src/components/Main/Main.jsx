@@ -9,7 +9,7 @@ import InlinePaymentButton from "../Payment/InlinePaymentButton";
 const Main = () => {
     const {
         onSent, showResult, loading, resultData,
-        setInput, input, history, typingLock,
+        setInput, input, history, isTyping,
         scheduleNum, seatModalOpen, setSeatModalOpen,
         bikeLocations, cinemaLocations
     } = useContext(Context);
@@ -31,7 +31,7 @@ const Main = () => {
 
     const sendMessage = () => {
         const trimmed = (input || '').trim();
-        if (!trimmed || typingLock || isComposing) return;
+        if (!trimmed || isTyping || isComposing) return;
 
         const message = trimmed;
 
@@ -43,7 +43,7 @@ const Main = () => {
     };
 
     const handleKeyDown = (e) => {
-        if (typingLock) return;
+        if (isTyping) return;
         if (e.key === 'Enter' && !isComposing) {
             e.preventDefault();
             sendMessage();
@@ -178,14 +178,19 @@ const Main = () => {
                             value={input}
                             type="text"
                             placeholder='텍스트를 입력해주세요..'
-                            disabled={typingLock}
+                            disabled={isTyping}
                             autoComplete="off"
                             spellCheck={false}
                         />
                         <div>
                             <img src={assets.mic_icon} alt="" />
-                            {input && !typingLock ? (
-                                <img onClick={sendMessage} src={assets.send_icon} alt="" />
+                            {input && !isTyping ? (
+                                <img
+                                    onClick={isTyping ? null : sendMessage}
+                                    src={assets.send_icon}
+                                    alt=""
+                                    style={{ cursor: isTyping ? 'not-allowed' : 'pointer', opacity: isTyping ? 0.5 : 1 }}
+                                />
                             ) : null}
                         </div>
                     </div>
