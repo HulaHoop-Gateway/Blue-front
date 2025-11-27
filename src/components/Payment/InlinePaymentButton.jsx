@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useContext } from 'react';
 import { Context } from '../../context/Context';
 import { loadPaymentWidget } from "@tosspayments/payment-widget-sdk";
@@ -9,10 +9,11 @@ const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대�
     const { setHistory } = useContext(Context);
     const widgetRef = useRef(null);
     const widgetContainerRef = useRef(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // 결제 위젯 초기화 및 렌더링
+    // 모달이 열릴 때 결제 위젯 초기화
     useEffect(() => {
-        if (!amount || !widgetContainerRef.current) return;
+        if (!isModalOpen || !amount || !widgetContainerRef.current) return;
 
         const initWidget = async () => {
             try {
@@ -21,7 +22,6 @@ const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대�
                     phoneNumber || "GUEST"
                 );
 
-                // 결제 수단 렌더링 (숨겨진 컨테이너에)
                 await widget.renderPaymentMethods(
                     `#payment-widget-${amount}`,
                     { value: amount }
@@ -35,13 +35,12 @@ const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대�
 
         initWidget();
 
-        // cleanup
         return () => {
             if (widgetContainerRef.current) {
                 widgetContainerRef.current.innerHTML = '';
             }
         };
-    }, [amount, phoneNumber]);
+    }, [isModalOpen, amount, phoneNumber]);
 
     const handlePaymentClick = async () => {
         if (!amount) {
@@ -54,31 +53,28 @@ const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대�
             return;
         }
 
-        // 사용자 메시지 추가
         setHistory(prev => [...prev, { type: "user", text: "결제하기" }]);
 
         try {
             const orderId = crypto.randomUUID();
 
-            // 결제 요청
             const result = await widgetRef.current.requestPayment({
                 orderId,
                 orderName,
                 amount
             });
 
-            // 결제 확인 요청
             await axiosInstance.post("/api/payments/confirm", {
                 paymentKey: result.paymentKey,
                 orderId: result.orderId,
                 amount: result.amount
             });
 
-            // onSuccess 콜백 호출 (영화 예약은 백엔드 응답으로 메시지 받음)
+            setIsModalOpen(false); // 결제 성공 시 모달 닫기
+
             if (onSuccess) {
                 onSuccess();
             } else {
-                // 자전거 예약은 여기서 메시지 추가
                 setHistory(prev => [...prev, {
                     type: "ai",
                     text: "결제가 완료되었습니다. 자전거를 이용해주세요."
@@ -87,12 +83,11 @@ const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대�
         } catch (error) {
             console.error("🔥 결제 실패:", error);
 
-            // 사용자가 결제를 취소한 경우는 에러로 처리하지 않음
             if (error.code === "USER_CANCEL" || error.message?.includes("cancel")) {
+                setIsModalOpen(false); // 취소 시 모달 닫기
                 return;
             }
 
-            // 결제 실패 시 에러 메시지 추가
             setHistory(prev => [...prev, {
                 type: "ai",
                 text: "결제 중 오류가 발생했습니다. 다시 시도해주세요."
@@ -101,22 +96,36 @@ const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대�
     };
 
     return (
-        <div className="inline-payment-button-container">
-            {/* 숨겨진 결제 위젯 컨테이너 */}
-            <div
-                id={`payment-widget-${amount}`}
-                ref={widgetContainerRef}
-                style={{ display: 'none' }}
-            />
+        <>
             <button
                 className="inline-payment-button"
-                onClick={handlePaymentClick}
+                onClick={() => setIsModalOpen(true)}
             >
                 결제하기
             </button>
-        </div>
+
+            {isModalOpen && (
+                <div className="payment-modal-overlay" onClick={() => setIsModalOpen(false)}>
+                    <div className="payment-modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="payment-modal-header">
+                            <h3>결제 수단 선택</h3>
+                            <button className="payment-modal-close" onClick={() => setIsModalOpen(false)}>✕</button>
+                        </div>
+                        <div
+                            id={`payment-widget-${amount}`}
+                            ref={widgetContainerRef}
+                        />
+                        <button
+                            className="payment-modal-submit"
+                            onClick={handlePaymentClick}
+                        >
+                            결제하기
+                        </button>
+                    </div>
+                </div>
+            )}
+        </>
     );
 };
 
 export default InlinePaymentButton;
-

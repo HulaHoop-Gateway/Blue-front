@@ -11,6 +11,7 @@ export const ContextProvider = (props) => {
     const [loading, setLoading] = useState(false);
     const [showResult, setShowResult] = useState(false);
     const [history, setHistory] = useState([]);
+    const [isTyping, setIsTyping] = useState(false);
 
 
     // 🔹 로그인 상태 관리
@@ -273,6 +274,7 @@ export const ContextProvider = (props) => {
                 .replace(/\*/g, "<br />");
 
             setLoading(false); // 로딩 종료
+            setIsTyping(true);  // 타이핑 시작
 
             // ✍️ 타이핑 효과 구현 (글자 단위)
             const characters = modified.split("");
@@ -299,6 +301,7 @@ export const ContextProvider = (props) => {
                     paymentType: extractedPaymentType || undefined // ✅ 결제 타입 추가
                 }]);
                 setResultData("");
+                setIsTyping(false); // 타이핑 종료
                 // 지도 상태 초기화 (History로 넘어갔으므로)
                 setBikeLocations([]);
                 setCinemaLocations([]);
@@ -312,10 +315,22 @@ export const ContextProvider = (props) => {
     };
 
     const contextValue = {
-        token, username, login, logout,
-        input, setInput, onSent, showResult,
-        loading, resultData, history, setHistory, newChat,
-        scheduleNum, setScheduleNum, seatModalOpen, setSeatModalOpen,
+        onSent,
+        input,
+        setInput,
+        resultData,
+        showResult,
+        loading,
+        history,
+        setHistory,
+        isTyping,
+        newChat,
+        token,
+        username,
+        login,
+        logout,
+        scheduleNum, setScheduleNum,
+        seatModalOpen, setSeatModalOpen,
         bikeLocations, setBikeLocations,
         cinemaLocations, setCinemaLocations,
         paymentAmount, setPaymentAmount,
