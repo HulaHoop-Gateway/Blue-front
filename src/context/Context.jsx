@@ -4,7 +4,7 @@ import { loadPaymentWidget } from "@tosspayments/payment-widget-sdk"; // Toss Pa
 
 export const Context = createContext();
 
-export const ContextProvider = (props) => {
+export const ContextProvider = ({ token, setToken, children }) => {
 
     const [input, setInput] = useState("");
     const [resultData, setResultData] = useState("");
@@ -12,25 +12,6 @@ export const ContextProvider = (props) => {
     const [showResult, setShowResult] = useState(false);
     const [history, setHistory] = useState([]);
     const [isTyping, setIsTyping] = useState(false);
-
-
-    // 🔹 로그인 상태 관리
-    const [token, setToken] = useState(localStorage.getItem("token") || null);
-    const [username, setUsername] = useState(localStorage.getItem("username") || null);
-
-    // 🔹 페이지 로드(새로고침) 시 백엔드 세션 초기화
-    useEffect(() => {
-        const resetSession = async () => {
-            try {
-                // 토큰이 있든 없든 세션 초기화 요청 (필요하다면 토큰 체크)
-                await axiosInstance.post("/api/ai/reset");
-                console.log("Session reset on page load");
-            } catch (error) {
-                console.warn("Failed to reset session on load:", error);
-            }
-        };
-        resetSession();
-    }, []); // 빈 배열: 마운트 시 1회 실행
 
     // 🔹 예약 상태 관리
     const [scheduleNum, setScheduleNum] = useState(null);
@@ -42,22 +23,22 @@ export const ContextProvider = (props) => {
     const [paymentAmount, setPaymentAmount] = useState(0);
     const [paymentPhone, setPaymentPhone] = useState("");
     const [actionType, setActionType] = useState(null);
+    const [paymentCompleted, setPaymentCompleted] = useState(false);
 
-    const login = (newToken, newUsername) => {
-        setToken(newToken);
-        setUsername(newUsername);
-        localStorage.setItem("token", newToken);
-        localStorage.setItem("username", newUsername);
-    };
-
-    const logout = () => {
-        setToken(null);
-        setUsername(null);
-        localStorage.removeItem("token");
-        localStorage.removeItem("username");
-        setHistory([]); // 로그아웃 시 히스토리 초기화
+    // 🔹 토큰 변경 시(로그인/로그아웃) 채팅 초기화
+    useEffect(() => {
         newChat();
-    };
+        // 백엔드 세션 초기화 (대화 맥락 리셋)
+        const resetSession = async () => {
+            try {
+                await axiosInstance.post("/api/ai/reset");
+                console.log("Session reset on token change");
+            } catch (error) {
+                console.warn("Failed to reset session:", error);
+            }
+        };
+        resetSession();
+    }, [token]);
 
     const newChat = () => {
         setLoading(false);
@@ -70,6 +51,7 @@ export const ContextProvider = (props) => {
         setPaymentAmount(0);
         setPaymentPhone("");
         setActionType(null);
+        setPaymentCompleted(false);
     }
 
     // 🔹 Toss Payments 결제 요청
@@ -326,9 +308,6 @@ export const ContextProvider = (props) => {
         isTyping,
         newChat,
         token,
-        username,
-        login,
-        logout,
         scheduleNum, setScheduleNum,
         seatModalOpen, setSeatModalOpen,
         bikeLocations, setBikeLocations,
@@ -336,12 +315,13 @@ export const ContextProvider = (props) => {
         paymentAmount, setPaymentAmount,
         paymentPhone, setPaymentPhone,
         actionType, setActionType,
+        paymentCompleted, setPaymentCompleted,
         requestTossPayment
     };
 
     return (
         <Context.Provider value={contextValue}>
-            {props.children}
+            {children}
         </Context.Provider>
     );
 };

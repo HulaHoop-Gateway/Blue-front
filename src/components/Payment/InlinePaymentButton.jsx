@@ -6,7 +6,7 @@ import axiosInstance from '../../api/axiosInstance';
 import './InlinePaymentButton.css';
 
 const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대여 결제", onSuccess }) => {
-    const { setHistory } = useContext(Context);
+    const { setHistory, paymentCompleted, setPaymentCompleted } = useContext(Context);
     const widgetRef = useRef(null);
     const widgetContainerRef = useRef(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -71,6 +71,7 @@ const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대�
             });
 
             setIsModalOpen(false); // 결제 성공 시 모달 닫기
+            setPaymentCompleted(true); // 결제 완료 상태 설정
 
             if (onSuccess) {
                 onSuccess();
@@ -100,8 +101,14 @@ const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대�
             <button
                 className="inline-payment-button"
                 onClick={() => setIsModalOpen(true)}
+                disabled={paymentCompleted}
+                style={{
+                    cursor: paymentCompleted ? 'not-allowed' : 'pointer',
+                    opacity: paymentCompleted ? 0.5 : 1,
+                    backgroundColor: paymentCompleted ? '#ccc' : ''
+                }}
             >
-                결제하기
+                {paymentCompleted ? '결제 완료' : '결제하기'}
             </button>
 
             {isModalOpen && (
