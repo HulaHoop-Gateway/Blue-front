@@ -67,7 +67,8 @@ const ReservationHistoryPage = () => {
         setHistories(histories.filter(item => item.transactionNum !== transactionNum));
       } catch (err) {
         console.error("Failed to cancel reservation:", err);
-        alert("예약 취소 중 오류가 발생했습니다.");
+        console.error("Error response:", err.response?.data); // 🔍 백엔드 에러 메시지 확인
+        alert(`예약 취소 중 오류가 발생했습니다: ${err.response?.data?.message || err.message}`);
       }
     }
   };
@@ -81,7 +82,7 @@ const ReservationHistoryPage = () => {
     if (amount == null) return "0";
     return `${Number(amount).toLocaleString()}원`;
   };
-  
+
   const formatTransactionNum = (num) => {
     if (num == null) return "";
     return `#${String(num).padStart(4, "0")}`;
@@ -206,9 +207,8 @@ const ReservationHistoryPage = () => {
                         {formatAmount(item.amountUsed)}
                       </span>
                       <span
-                        className={`reservation-history__status reservation-history__status--${
-                          (item.status || "").toLowerCase()
-                        }`}
+                        className={`reservation-history__status reservation-history__status--${(item.status || "").toLowerCase()
+                          }`}
                       >
                         {formatStatusText(item.status)}
                       </span>
@@ -222,7 +222,7 @@ const ReservationHistoryPage = () => {
                         {formatTransactionNum(item.transactionNum)}
                       </span>
                     </div>
-                    <button 
+                    <button
                       className="reservation-history__cancel-button"
                       onClick={() => handleCancel(item.transactionNum)}
                     >

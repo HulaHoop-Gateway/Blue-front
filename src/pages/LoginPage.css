@@ -363,3 +363,52 @@ body{
     width: 100%;
   }
 }
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.5);  /* 반투명 배경 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-body {
+  background: #fff;
+  padding: 36px 24px 24px 24px;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+  min-width: 320px;
+  max-width: 90vw;
+  text-align: center;
+}
+
+.modal-body input {
+  display: block;
+  width: 90%;
+  margin: 14px auto;
+  padding: 9px;
+}
+.modal-body button {
+  margin: 12px auto;
+  padding: 7px 18px;
+  border-radius: 8px;
+}
+
+.close-btn {
+  margin-top: 12px;
+  background: #ededed;
+  border: none;
+}
+.result-message {
+  width: 80%;
+  margin: 10px auto;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: center;
+  color: #0f172a; /* 진한 텍스트 색상 */
+  background-color: #e5e7eb; /* 옅은 회색 배경 */
+}
