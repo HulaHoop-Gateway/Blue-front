@@ -146,6 +146,14 @@ export const ContextProvider = ({ token, setToken, children }) => {
             return;
         }
 
+        // 🔹 결제 완료 후 상태 초기화
+        if (text.includes("결제 완료") || text.includes("결제가 완료")) {
+            setPaymentCompleted(false); // ✅ 다음 예약을 위해 결제 완료 상태 리셋
+            setPaymentAmount(0);
+            setPaymentPhone("");
+            setActionType(null);
+        }
+
         try {
             const res = await axiosInstance.post("/api/ai/ask", { message: text });
             const aiText = res.data?.result || res.data?.message || "";

@@ -5,6 +5,7 @@ import MyPage from "./pages/MyPage";
 import ReservationHistoryPage from "./pages/ReservationHistoryPage";
 import UsageHistoryPage from "./pages/UsageHistoryPage";
 import CancellationHistoryPage from "./pages/CancellationHistoryPage";
+import NotFoundPage from "./pages/NotFoundPage";
 import Layout from "./components/Layout/Layout";
 import Main from "./components/Main/Main";
 
@@ -50,7 +51,7 @@ export default function App() {
         <Routes>
           {/* 로그인 페이지: 토큰이 있으면 홈으로 리다이렉트 */}
           <Route path="/login" element={token ? <Navigate to="/" /> : <LoginPage onLogin={handleLogin} />} />
-          
+
           {/* 보호된 경로 (Layout을 통해 렌더링) */}
           <Route path="/" element={token ? <Layout onLogout={handleLogout} /> : <Navigate to="/login" />}>
             {/* Layout의 Outlet에서 렌더링될 컴포넌트들 */}
@@ -60,6 +61,9 @@ export default function App() {
             <Route path="usage-history" element={<UsageHistoryPage />} />
             <Route path="cancellation-history" element={<CancellationHistoryPage />} />
           </Route>
+
+          {/* 404 페이지 (모든 경로에 매칭되지 않을 때) */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Router>
     </ContextProvider>
