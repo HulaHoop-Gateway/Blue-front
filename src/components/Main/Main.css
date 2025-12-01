@@ -253,21 +253,30 @@
     line-height: 1.8;
 }
 
-.kakao-map-display {
-    margin-top: 20px;
-    /* Increased top margin for better visual separation */
-    width: 100%;
-    /* Corrected width to fix map rendering 'holes' */
-    max-width: unset;
-    /* Remove max-width constraint to allow it to be as wide as possible */
-    height: 400px;
-    /* Reduced height to prevent it from being too long vertically */
-    min-height: 400px;
-    /* Ensure container never collapses */
-    border-radius: 10px;
-    /* Optional: rounded corners */
-    overflow: hidden;
-    /* Ensures map content stays within bounds */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    /* Optional: subtle shadow */
+/* Microphone Pulse Animation */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 82, 82, 0.7);
+        transform: scale(1);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 82, 82, 0);
+        transform: scale(1.1);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 82, 82, 0);
+        transform: scale(1);
+    }
+}
+
+.listening {
+    animation: pulse 1.5s infinite;
+    border-radius: 50%;
+    /* Ensure circular pulse */
+    background-color: rgba(255, 255, 255, 0.1);
+    /* Optional: slight background highlight */
+    filter: brightness(1.2) sepia(1) hue-rotate(-50deg) saturate(3);
+    /* Reddish tint */
 }
