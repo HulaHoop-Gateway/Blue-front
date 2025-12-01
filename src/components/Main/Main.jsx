@@ -19,6 +19,71 @@ const Main = () => {
 
     // ✅ 한글 IME 조합 상태
     const [isComposing, setIsComposing] = useState(false);
+    const [isRecording, setIsRecording] = useState(false);
+    const recognitionRef = useRef(null);
+
+    // Initialize microphone permission and speech recognition
+    useEffect(() => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            console.warn('SpeechRecognition API를 지원하지 않는 브라우저입니다.');
+            alert('이 브라우저는 음성 인식을 지원하지 않습니다. Chrome 브라우저를 사용해주세요.');
+            return;
+        }
+
+        const recognizer = new SpeechRecognition();
+        recognizer.lang = 'ko-KR';
+        recognizer.continuous = true;
+        recognizer.interimResults = true;
+
+        recognizer.onresult = (event) => {
+            let interim = '';
+            let final = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                const transcriptPart = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    final += transcriptPart;
+                } else {
+                    interim += transcriptPart;
+                }
+            }
+            // 인식된 텍스트를 바로 input에 반영
+            setInput(final + interim);
+        };
+
+        recognizer.onerror = (e) => {
+            console.error('SpeechRecognition error:', e);
+            setIsRecording(false);
+        };
+
+        recognizer.onend = () => {
+            // 녹음이 자동으로 끊겼을 때 상태 업데이트
+            setIsRecording(false);
+        };
+
+        recognitionRef.current = recognizer;
+    }, []);
+
+    const toggleRecording = () => {
+        if (!recognitionRef.current) {
+            alert('음성 인식 기능이 초기화되지 않았습니다.');
+            return;
+        }
+
+        if (isRecording) {
+            recognitionRef.current.stop();
+            setIsRecording(false);
+        } else {
+            try {
+                recognitionRef.current.start();
+                setIsRecording(true);
+                setInput(''); // 녹음 시작 시 입력창 초기화
+            } catch (error) {
+                console.error("Speech recognition start error:", error);
+                setIsRecording(false);
+            }
+        }
+    };
 
     useEffect(() => {
         if (chatContainerRef.current) {
@@ -127,18 +192,6 @@ const Main = () => {
                                                 amount={item.amount}
                                                 phoneNumber={item.phone}
                                                 orderName={item.paymentType === 'BICYCLE' ? '자전거 대여 결제' : '영화 예매 결제'}
-                                                reservationData={{
-                                                    type: item.paymentType === 'BICYCLE' ? 'bike' : 'movie',
-                                                    ...(item.paymentType === 'BICYCLE' ? {
-                                                        bikeName: item.bicycleName || '자전거',
-                                                        rentalTime: item.rentalTime || '대여시간 정보 없음',
-                                                        location: item.location || '대여 지점'
-                                                    } : {
-                                                        movieTitle: item.movieTitle || '영화',
-                                                        showtime: item.showtime || '상영시간 정보 없음',
-                                                        seats: item.seats || '좌석 정보 없음'
-                                                    })
-                                                }}
                                                 onSuccess={() => {
                                                     onSent("결제 완료");
                                                 }}
@@ -195,7 +248,13 @@ const Main = () => {
                             spellCheck={false}
                         />
                         <div>
-                            <img src={assets.mic_icon} alt="" />
+                            <img
+                                src={assets.mic_icon}
+                                alt=""
+                                onClick={toggleRecording}
+                                className={isRecording ? 'listening' : ''}
+                                style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                            />
                             {input && !isTyping ? (
                                 <img
                                     onClick={isTyping ? null : sendMessage}
