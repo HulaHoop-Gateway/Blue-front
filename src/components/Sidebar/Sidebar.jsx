@@ -19,10 +19,10 @@ const Sidebar = ({ onLogout }) => {
         <div className={`sidebar ${extended ? 'extended' : ''}`}>
             <div className="top">
                 <img
-                    onClick={() => setExtended(prev => !prev)} 
-                    className="menu" 
-                    src={assets.menu_icon} 
-                    alt="메뉴" 
+                    onClick={() => setExtended(prev => !prev)}
+                    className="menu"
+                    src={assets.menu_icon}
+                    alt="메뉴"
                 />
                 <div onClick={() => navigate('/')} className="new-chat">
                     <img src={assets.plus_icon} alt="새로운 채팅" />
@@ -51,8 +51,8 @@ const Sidebar = ({ onLogout }) => {
 
             <div className="bottom">
                 <div className="bottom-item recent-entry" onClick={() => navigate('/mypage')} style={{ cursor: 'pointer' }}>
-                    <img src={assets.user_icon} alt="마이페이지" />
-                    <p className={extended ? 'visible' : 'hidden'}>마이페이지</p>
+                    <img src={assets.user_icon} alt="계정 관리" />
+                    <p className={extended ? 'visible' : 'hidden'}>계정 관리</p>
                 </div>
                 <div className="bottom-item recent-entry" onClick={onLogout} style={{ cursor: 'pointer' }}>
                     <img src={assets.logout_icon} alt="로그아웃 아이콘으로 바꿀 예정" />

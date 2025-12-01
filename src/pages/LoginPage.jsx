@@ -5,6 +5,7 @@ import axios from "axios"; // 아이디 중복확인을 위해 추가
 import "./LoginPage.css";
 import FindIdModal from "./FindIdModal";
 import FindPasswordModal from "./FindPasswordModal";
+import TermsModal from "../components/TermsModal";
 
 export default function LoginPage({ onLogin }) {
   // 로그인 상태
@@ -39,6 +40,11 @@ export default function LoginPage({ onLogin }) {
   // 최상단 컴포넌트 내부(useState 등)에 아래 state 및 핸들러 추가
   const [showFindId, setShowFindId] = useState(false);
   const [showFindPw, setShowFindPw] = useState(false);
+
+  // 약관 모달 상태
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [termsTitle, setTermsTitle] = useState("");
+  const [termsContent, setTermsContent] = useState("");
 
   // 로그인 핸들러
   const handleLoginSubmit = async (e) => {
@@ -77,6 +83,62 @@ export default function LoginPage({ onLogin }) {
     const updated = [...formData.agreements];
     updated[index] = !updated[index];
     setFormData((prev) => ({ ...prev, agreements: updated }));
+  };
+
+  // 약관 클릭 핸들러
+  const handleTermsClick = (title) => {
+    let content = "";
+    // " (필수)" 또는 " (선택)" 제거
+    const cleanTitle = title.replace(/ \(필수\)| \(선택\)/g, "");
+
+    switch (cleanTitle) {
+      case "서비스 이용약관":
+        content = `[서비스 이용약관]
+
+제1조 (목적)
+본 약관은 훌라후프(이하 "회사")가 제공하는 서비스의 이용 조건 및 절차, 이용자와 회사의 권리, 의무, 책임사항을 규정함을 목적으로 합니다.
+
+제2조 (용어의 정의)
+1. "서비스"라 함은 회사가 제공하는 모든 온라인 서비스를 의미합니다.
+2. "회원"이라 함은 회사와 서비스 이용 계약을 체결하고 이용자 아이디를 부여받은 자를 말합니다.`;
+        break;
+      case "개인정보 처리방침":
+        content = `[개인정보 수집 및 이용 동의]
+
+1. 수집하는 개인정보 항목
+- 필수항목: 이름, 전화번호, 이메일, 주소
+- 선택항목: 알림 수신 여부
+
+2. 개인정보의 수집 및 이용 목적
+- 회원 관리, 서비스 제공, 계약 이행, 요금 정산, 고객 상담`;
+        break;
+      case "위치기반 서비스 이용약관":
+        content = `[위치기반 서비스 이용약관]
+
+1. 목적
+본 약관은 회사가 제공하는 위치기반 서비스의 이용 조건 및 절차를 규정함을 목적으로 합니다.
+
+2. 서비스 내용
+- 현재 위치를 기반으로 한 주변 가맹점(영화관, 자전거 대여소) 검색 및 추천 서비스 제공`;
+        break;
+      case "알림 메시지 수신 동의":
+        content = `[마케팅 정보 수신 동의]
+
+1. 목적
+- 이벤트 및 혜택 정보 제공, 맞춤형 광고 전송
+
+2. 수집 항목
+- 이름, 전화번호, 이메일
+
+3. 보유 기간
+- 회원 탈퇴 시 또는 동의 철회 시까지`;
+        break;
+      default:
+        content = "내용을 불러올 수 없습니다.";
+    }
+    setTermsTitle(cleanTitle);
+    setTermsContent(content);
+    setShowTermsModal(true);
   };
 
   // 아이디 중복 확인 핸들러
@@ -309,7 +371,7 @@ export default function LoginPage({ onLogin }) {
               />
               <button type="button" onClick={openAddressSearch}>검색</button>
             </div>
-            
+
             {/* 이메일 */}
             <div className="form-group">
               <input
@@ -336,7 +398,13 @@ export default function LoginPage({ onLogin }) {
                     checked={formData.agreements[idx]}
                     onChange={() => handleAgreementChange(idx)}
                   />
-                  <span>{text}</span>
+                  <span
+                    onClick={() => handleTermsClick(text)}
+                    className="terms-link"
+                    title="내용 보기"
+                  >
+                    {text}
+                  </span>
                 </div>
               ))}
             </div>
@@ -357,7 +425,7 @@ export default function LoginPage({ onLogin }) {
           <div className="toggle">
             <div className="toggle-panel toggle-left">
               <h1>다시 만나서 반가워요 👋</h1>
-              <p>훌라후프 블루는 <b>가맹점과 고객을 하나의 링으로 묶는 AI 게이트웨이</b>예요.<br/>
+              <p>훌라후프 블루는 <b>가맹점과 고객을 하나의 링으로 묶는 AI 게이트웨이</b>예요.<br />
                 로그인하면 <b>예약·결제·통계</b>를 한 화면에서 이어서 처리할 수 있어요.</p>
               <button type="button" className="hidden" id="login" onClick={handleLoginClick}>
                 로그인으로 이동
@@ -377,6 +445,13 @@ export default function LoginPage({ onLogin }) {
       </div>
       {showFindId && <FindIdModal onClose={() => setShowFindId(false)} />}
       {showFindPw && <FindPasswordModal onClose={() => setShowFindPw(false)} />}
+      {showTermsModal && (
+        <TermsModal
+          title={termsTitle}
+          content={termsContent}
+          onClose={() => setShowTermsModal(false)}
+        />
+      )}
     </>
   );
 }
