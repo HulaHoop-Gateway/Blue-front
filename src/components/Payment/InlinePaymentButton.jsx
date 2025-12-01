@@ -5,7 +5,7 @@ import { loadPaymentWidget } from "@tosspayments/payment-widget-sdk";
 import axiosInstance from '../../api/axiosInstance';
 import './InlinePaymentButton.css';
 
-const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대여 결제", onSuccess }) => {
+const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대여 결제", onSuccess, reservationData }) => {
     const { setHistory, paymentCompleted, setPaymentCompleted } = useContext(Context);
     const widgetRef = useRef(null);
     const widgetContainerRef = useRef(null);

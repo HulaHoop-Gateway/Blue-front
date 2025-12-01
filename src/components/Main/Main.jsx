@@ -127,6 +127,18 @@ const Main = () => {
                                                 amount={item.amount}
                                                 phoneNumber={item.phone}
                                                 orderName={item.paymentType === 'BICYCLE' ? '자전거 대여 결제' : '영화 예매 결제'}
+                                                reservationData={{
+                                                    type: item.paymentType === 'BICYCLE' ? 'bike' : 'movie',
+                                                    ...(item.paymentType === 'BICYCLE' ? {
+                                                        bikeName: item.bicycleName || '자전거',
+                                                        rentalTime: item.rentalTime || '대여시간 정보 없음',
+                                                        location: item.location || '대여 지점'
+                                                    } : {
+                                                        movieTitle: item.movieTitle || '영화',
+                                                        showtime: item.showtime || '상영시간 정보 없음',
+                                                        seats: item.seats || '좌석 정보 없음'
+                                                    })
+                                                }}
                                                 onSuccess={() => {
                                                     onSent("결제 완료");
                                                 }}
