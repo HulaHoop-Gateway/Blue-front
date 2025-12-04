@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "../api/axiosInstance";
 import "./MyPage.css";
 import TermsModal from "../components/TermsModal";
 
@@ -30,19 +30,30 @@ export default function MyPage() {
   // 회원정보 불러오기
   const fetchMemberInfo = async () => {
     try {
-      const token = localStorage.getItem("user_jwt");
+      const token = sessionStorage.getItem("user_jwt");
       if (!token) {
+        console.warn("⚠️ [MyPage] 토큰이 없습니다.");
         alert("로그인이 필요합니다.");
         window.location.href = "/login";
         return;
       }
 
-      const response = await axios.get("http://localhost:8090/api/member/info", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      console.log("🔍 [MyPage] 회원정보 요청 중...");
+      const response = await axiosInstance.get("/api/member/info");
+
+      console.log("✅ [MyPage] 회원정보 로드 성공:", response.data);
       setMember(response.data);
     } catch (error) {
-      console.error("❌ 회원정보 불러오기 실패:", error);
+      console.error("❌ [MyPage] 회원정보 불러오기 실패:", error);
+
+      // 401/403 에러는 axiosInstance interceptor가 처리
+      // 여기서는 네트워크 오류 등만 처리
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        // Interceptor가 이미 처리했으므로 여기서는 아무것도 하지 않음
+        return;
+      }
+
+      // 기타 오류
       alert("회원 정보를 불러오는 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
@@ -70,11 +81,8 @@ export default function MyPage() {
 
   // 회원정보 수정 (여기서 모든 정보 + 알림 상태 전송)
   const handleUpdate = async () => {
-    const token = localStorage.getItem("user_jwt");
     try {
-      await axios.patch("http://localhost:8090/api/member/update", member, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axiosInstance.patch("/api/member/update", member);
       alert("회원정보가 수정되었습니다.");
     } catch (error) {
       console.error("❌ 회원정보 수정 실패:", error);
@@ -96,13 +104,10 @@ export default function MyPage() {
       return;
     }
 
-    const token = localStorage.getItem("user_jwt");
     try {
-      await axios.patch("http://localhost:8090/api/member/update-password", {
+      await axiosInstance.patch("/api/member/update-password", {
         currentPassword,
         newPassword
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
       });
       alert("비밀번호가 성공적으로 변경되었습니다.");
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -116,13 +121,10 @@ export default function MyPage() {
   // 회원 탈퇴
   const handleDelete = async () => {
     if (!window.confirm("정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) return;
-    const token = localStorage.getItem("user_jwt");
     try {
-      await axios.delete("http://localhost:8090/api/member/delete", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axiosInstance.delete("/api/member/delete");
       alert("회원 탈퇴가 완료되었습니다.");
-      localStorage.removeItem("user_jwt");
+      sessionStorage.removeItem("user_jwt");
       window.location.href = "/";
     } catch (error) {
       console.error("❌ 회원 탈퇴 실패:", error);

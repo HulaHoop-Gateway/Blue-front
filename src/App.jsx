@@ -15,8 +15,9 @@ export default function App() {
   const [token, setToken] = useState(null);
 
   // ✅ 페이지 새로고침 시 JWT 유지 및 만료 확인
+  // ✅ 페이지 새로고침 시 JWT 유지 및 만료 확인
   useEffect(() => {
-    const savedToken = localStorage.getItem("user_jwt");
+    const savedToken = sessionStorage.getItem("user_jwt");
     if (savedToken) {
       try {
         const payload = JSON.parse(atob(savedToken.split('.')[1]));
@@ -24,12 +25,12 @@ export default function App() {
         if (payload.exp * 1000 > Date.now()) {
           setToken(savedToken);
         } else {
-          localStorage.removeItem("user_jwt");
+          sessionStorage.removeItem("user_jwt");
           setToken(null);
         }
       } catch (e) {
         // 토큰이 유효하지 않은 경우 (예: 손상된 토큰)
-        localStorage.removeItem("user_jwt");
+        sessionStorage.removeItem("user_jwt");
         setToken(null);
       }
     }
@@ -37,12 +38,12 @@ export default function App() {
 
   const handleLogin = (newToken) => {
     setToken(newToken);
-    localStorage.setItem("user_jwt", newToken);
+    sessionStorage.setItem("user_jwt", newToken);
   };
 
   const handleLogout = () => {
     setToken(null);
-    localStorage.removeItem("user_jwt");
+    sessionStorage.removeItem("user_jwt");
   };
 
   return (

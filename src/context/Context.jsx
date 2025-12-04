@@ -10,6 +10,7 @@ export const ContextProvider = ({ token, setToken, children }) => {
     const [resultData, setResultData] = useState("");
     const [loading, setLoading] = useState(false);
     const [showResult, setShowResult] = useState(false);
+
     const [history, setHistory] = useState([]);
     const [isTyping, setIsTyping] = useState(false);
 
@@ -26,18 +27,23 @@ export const ContextProvider = ({ token, setToken, children }) => {
     const [paymentCompleted, setPaymentCompleted] = useState(false);
 
     // 🔹 토큰 변경 시(로그인/로그아웃) 채팅 초기화
+    // 🔹 토큰 변경 시(로그인/로그아웃) 채팅 초기화
     useEffect(() => {
         newChat();
-        // 백엔드 세션 초기화 (대화 맥락 리셋)
-        const resetSession = async () => {
-            try {
-                await axiosInstance.post("/api/ai/reset");
-                console.log("Session reset on token change");
-            } catch (error) {
-                console.warn("Failed to reset session:", error);
-            }
-        };
-        resetSession();
+
+        // 새로고침 시 백엔드 세션도 초기화 (플로우 탈출)
+        // 새로고침 시 백엔드 세션도 초기화 (플로우 탈출)
+        const savedToken = sessionStorage.getItem("user_jwt");
+        if (savedToken) {
+            // axiosInstance 대신 직접 호출하여 인터셉터 문제 배제
+            import("axios").then(axios => {
+                axios.default.post("http://localhost:8090/api/ai/reset", {}, {
+                    headers: { Authorization: `Bearer ${savedToken}` }
+                })
+                    .then(() => console.log("✅ Backend session reset success"))
+                    .catch(err => console.error("❌ Failed to reset backend session:", err));
+            });
+        }
     }, [token]);
 
     const newChat = () => {
@@ -52,7 +58,7 @@ export const ContextProvider = ({ token, setToken, children }) => {
         setPaymentPhone("");
         setActionType(null);
         setPaymentCompleted(false);
-    }
+    };
 
     // 🔹 Toss Payments 결제 요청
     const requestTossPayment = async (amount, phoneNumber, orderName = "자전거 대여 결제", onSuccess, onError) => {
@@ -103,7 +109,33 @@ export const ContextProvider = ({ token, setToken, children }) => {
         }
 
         // 사용자 메시지 추가
-        setHistory(prev => [...prev, { type: "user", text }]);
+        const newHistoryItem = { type: "user", text };
+
+        // 🚫 취소/종료 키워드 감지 -> 이전 결제 버튼 비활성화
+        if (["취소", "그만", "종료", "안할래", "나가기"].some(keyword => text.includes(keyword))) {
+            setHistory(prev => prev.map(item => {
+                if (item.action === 'PAYMENT_CONFIRM') {
+                    return { ...item, disabled: true };
+                }
+                return item;
+            }).concat(newHistoryItem));
+        }
+        // ✅ 결제 완료 감지 -> 해당 버튼 완료 처리
+        else if (text === "결제 완료") {
+            setHistory(prev => {
+                // 가장 최근의 결제 버튼을 찾아서 완료 처리
+                const lastPaymentIndex = prev.findLastIndex(item => item.action === 'PAYMENT_CONFIRM');
+                if (lastPaymentIndex !== -1) {
+                    const newHistory = [...prev];
+                    newHistory[lastPaymentIndex] = { ...newHistory[lastPaymentIndex], completed: true };
+                    return newHistory.concat(newHistoryItem);
+                }
+                return prev.concat(newHistoryItem);
+            });
+        } else {
+            setHistory(prev => [...prev, newHistoryItem]);
+        }
+
         setInput("");
 
         // 🔹 좌석 선택 모달 열기 명령 처리
@@ -180,7 +212,7 @@ export const ContextProvider = ({ token, setToken, children }) => {
             // "해줘"는 "예약해줘" 같은 명령일 수 있으므로 주의. 하지만 "1번 선택해줘" 같은 경우를 잡아야 함.
             // 따라서 "숫자 + 번" 또는 "선택" 키워드가 핵심.
 
-            if (text.includes("선택") || text.includes("번") || text.includes("결제")) {
+            if (text.includes("선택") || text.includes("번") || text.includes("결제") || /^\d+$/.test(text.trim())) {
                 cinemas = null;
                 bikes = null;
             }

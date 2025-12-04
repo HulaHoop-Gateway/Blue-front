@@ -14,7 +14,7 @@ const ReservationHistoryPage = () => {
   const fetchReservationHistory = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("user_jwt");
+      const token = sessionStorage.getItem("user_jwt");
       if (!token) {
         throw new Error("로그인이 필요합니다.");
       }
@@ -75,7 +75,7 @@ const ReservationHistoryPage = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
-    return dateString.toString().substring(0, 10);
+    return dateString.toString().replace("T", " ").substring(0, 16);
   };
 
   const formatAmount = (amount) => {
