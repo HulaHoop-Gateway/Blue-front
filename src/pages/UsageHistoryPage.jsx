@@ -18,7 +18,7 @@ const UsageHistoryPage = () => {
         setLoading(true);
         setError("");
 
-        const token = localStorage.getItem("user_jwt");
+        const token = sessionStorage.getItem("user_jwt");
         if (!token) {
           setError("로그인이 필요합니다.");
           return;
@@ -56,7 +56,7 @@ const UsageHistoryPage = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
-    return dateString.toString().substring(0, 10);
+    return dateString.toString().replace("T", " ").substring(0, 16);
   };
 
   const formatAmount = (amount) => {
@@ -200,9 +200,8 @@ const UsageHistoryPage = () => {
                         {formatAmount(item.amountUsed)}
                       </span>
                       <span
-                        className={`usage-history__status usage-history__status--${
-                          (item.status || "").toLowerCase()
-                        }`}
+                        className={`usage-history__status usage-history__status--${(item.status || "").toLowerCase()
+                          }`}
                       >
                         {formatStatusText(item.status)}
                       </span>

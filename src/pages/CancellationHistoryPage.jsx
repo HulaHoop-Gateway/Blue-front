@@ -20,7 +20,7 @@ const CancellationHistoryPage = () => {
         setError("");
 
         // 1) 토큰 가져오기
-        const token = localStorage.getItem("user_jwt");
+        const token = sessionStorage.getItem("user_jwt");
         if (!token) {
           setError("로그인이 필요합니다.");
           setLoading(false);
@@ -205,9 +205,8 @@ const CancellationHistoryPage = () => {
                         {formatAmount(item.amountUsed)}
                       </span>
                       <span
-                        className={`cancellation-history__status cancellation-history__status--${
-                          (item.status || "").toLowerCase()
-                        }`}
+                        className={`cancellation-history__status cancellation-history__status--${(item.status || "").toLowerCase()
+                          }`}
                       >
                         {formatStatusText(item.status)}
                       </span>

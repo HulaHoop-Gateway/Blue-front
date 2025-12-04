@@ -64,6 +64,7 @@ const Main = () => {
         recognitionRef.current = recognizer;
     }, []);
 
+
     const toggleRecording = () => {
         if (!recognitionRef.current) {
             alert('음성 인식 기능이 초기화되지 않았습니다.');
@@ -192,6 +193,8 @@ const Main = () => {
                                                 amount={item.amount}
                                                 phoneNumber={item.phone}
                                                 orderName={item.paymentType === 'BICYCLE' ? '자전거 대여 결제' : '영화 예매 결제'}
+                                                disabled={item.disabled}
+                                                isCompleted={item.completed}
                                                 onSuccess={() => {
                                                     onSent("결제 완료");
                                                 }}

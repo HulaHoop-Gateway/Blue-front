@@ -25,7 +25,7 @@ const Sidebar = ({ onLogout }) => {
                     alt="메뉴"
                 />
                 <div onClick={() => navigate('/')} className="new-chat">
-                    <img src={assets.plus_icon} alt="새로운 채팅" />
+                    <img src={assets.plus_icon} alt="채팅으로 돌아가기" />
                     {extended && <p>채팅으로 돌아가기</p>}
                 </div>
 

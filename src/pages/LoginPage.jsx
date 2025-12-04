@@ -57,7 +57,7 @@ export default function LoginPage({ onLogin }) {
       });
       const token = response.data.token;
       if (token) {
-        localStorage.setItem("user_jwt", token);
+        sessionStorage.setItem("user_jwt", token);
         onLogin(token);
         navigate("/"); // 로그인 성공 시 홈으로 이동
       } else {

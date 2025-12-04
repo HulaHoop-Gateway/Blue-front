@@ -5,8 +5,8 @@ import { loadPaymentWidget } from "@tosspayments/payment-widget-sdk";
 import axiosInstance from '../../api/axiosInstance';
 import './InlinePaymentButton.css';
 
-const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대여 결제", onSuccess, reservationData }) => {
-    const { setHistory, paymentCompleted, setPaymentCompleted } = useContext(Context);
+const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대여 결제", onSuccess, reservationData, disabled, isCompleted }) => {
+    const { setHistory, setPaymentCompleted } = useContext(Context);
     const widgetRef = useRef(null);
     const widgetContainerRef = useRef(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -71,7 +71,7 @@ const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대�
             });
 
             setIsModalOpen(false); // 결제 성공 시 모달 닫기
-            setPaymentCompleted(true); // 결제 완료 상태 설정
+            // setPaymentCompleted(true); // ❌ Global state removal (handled by history update)
 
             if (onSuccess) {
                 onSuccess();
@@ -96,19 +96,21 @@ const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대�
         }
     };
 
+    const isButtonDisabled = disabled || isCompleted;
+
     return (
         <>
             <button
                 className="inline-payment-button"
                 onClick={() => setIsModalOpen(true)}
-                disabled={paymentCompleted}
+                disabled={isButtonDisabled}
                 style={{
-                    cursor: paymentCompleted ? 'not-allowed' : 'pointer',
-                    opacity: paymentCompleted ? 0.5 : 1,
-                    backgroundColor: paymentCompleted ? '#ccc' : ''
+                    cursor: isButtonDisabled ? 'not-allowed' : 'pointer',
+                    opacity: isButtonDisabled ? 0.5 : 1,
+                    backgroundColor: isButtonDisabled ? '#ccc' : ''
                 }}
             >
-                {paymentCompleted ? '결제 완료' : '결제하기'}
+                {isCompleted ? '결제 완료' : '결제하기'}
             </button>
 
             {isModalOpen && (
