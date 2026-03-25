@@ -1,21 +1,25 @@
 // src/api/axiosInstance.js
 import axios from "axios";
 
+// 매번 fetch나 axios 쏠 때마다 서버 주소 치기 귀찮으니까
+// 여기서 아예 기본 세팅을 잡아서 '공용 통신 객체'로 만들어 둔 거임.
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:8090", // Spring Boot 서버
+  baseURL: "http://localhost:8090",
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true, // JWT는 쿠키가 아닌 헤더로 전송
+  withCredentials: true, // 세션 유지나 CORS 에러 뚫을 때 필수 옵션
 });
 
-// 요청 시 JWT 자동 첨부 (Request Interceptor)
+// 요청 가로채기 (Request Interceptor)
+// 백엔드는 API 요청 시 JWT 토큰이 없으면 무조건 입구컷(401) 시켜버리기 때문에,
+// 여기서 무언가를 요청하기 직전에 세션스토리지에서 토큰을 꺼내서 헤더(Authorization)에 자동으로 꽂아줌.
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = sessionStorage.getItem("user_jwt");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log("🔑 [axiosInstance] JWT 토큰 첨부됨");
+      console.log("[axiosInstance] JWT 토큰 첨부됨");
     }
     return config;
   },
@@ -35,17 +39,15 @@ axiosInstance.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response;
 
-      // 401 Unauthorized: 인증 실패 (토큰 없음, 만료, 유효하지 않음)
+      // 401 Unauthorized: 로그인 토큰이 없거나 기간이 다 돼서 죽었음
       if (status === 401) {
-        console.error("❌ [axiosInstance] 401 Unauthorized - 인증 실패");
+        console.error("401 Unauthorized - 인증 실패 (토큰 만료/없음)");
 
-        // 토큰 제거
         sessionStorage.removeItem("user_jwt");
 
-        // 에러 메시지 표시
         const errorMessage = data?.message || "로그인이 필요합니다. 다시 로그인해주세요.";
 
-        // 현재 로그인 페이지가 아닌 경우에만 알림 표시
+        // 이미 로그인 창이면 알림 두 번 안 뜨게 막음
         if (!window.location.pathname.includes("/login")) {
           alert(errorMessage);
 
@@ -54,9 +56,9 @@ axiosInstance.interceptors.response.use(
         }
       }
 
-      // 403 Forbidden: 권한 없음
+      // 403 Forbidden: 로그인은 했는데, 관리자 페이지 등 남의 구역 넘볼 때
       else if (status === 403) {
-        console.error("❌ [axiosInstance] 403 Forbidden - 권한 없음");
+        console.error("403 Forbidden - 권한 없음");
 
         // 토큰은 있지만 권한이 없는 경우
         const errorMessage = data?.message || "접근 권한이 없습니다.";
