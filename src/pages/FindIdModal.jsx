@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import axiosInstance from "../api/axiosInstance";
-import "./FindAccountModal.css"; // ✅ Import the new CSS
+import "./FindAccountModal.css";
 
 function FindIdModal({ onClose }) {
   const [name, setName] = useState("");
@@ -10,6 +10,9 @@ function FindIdModal({ onClose }) {
   const [result, setResult] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
 
+  // 아이디 찾기 버튼 눌렀을 때 실행
+  // 이름이랑 이메일 조합으로 백엔드에 회원 찾아달라고 요청함.
+  // 200 오면 아이디 보여주고, 400이면 '없는 회원'으로 처리.
   const handleFindId = async (e) => {
     e.preventDefault();
     setIsSuccess(false);
@@ -39,6 +42,7 @@ function FindIdModal({ onClose }) {
     }
   };
 
+  // 조회 성공 여부에 따라 메시지 글씨 색깔(CSS 클래스) 바꿔주는 헬퍼
   const getResultMessageClass = () => {
     if (!result) return "result-message";
     return isSuccess ? "result-message success" : "result-message error";
@@ -73,7 +77,7 @@ function FindIdModal({ onClose }) {
         {result && <p className={getResultMessageClass()}>{result}</p>}
 
         <div className="button-group">
-            <button className="close-btn" onClick={onClose}>닫기</button>
+          <button className="close-btn" onClick={onClose}>닫기</button>
         </div>
       </div>
     </div>
