@@ -8,12 +8,12 @@ import FindPasswordModal from "./FindPasswordModal";
 import TermsModal from "../components/TermsModal";
 
 export default function LoginPage({ onLogin }) {
-  // 로그인 상태
+  // 로그인할 때 쓰는 상태값들
   const [loginId, setLoginId] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
 
-  // 회원가입 상태
+  // 회원가입할 때 필요한 상태값들 (객체 하나로 묶어서 관리)
   const [formData, setFormData] = useState({
     id: "",
     password: "",
@@ -37,16 +37,18 @@ export default function LoginPage({ onLogin }) {
   const handleRegisterClick = () => setIsActive(true);
   const handleLoginClick = () => setIsActive(false);
 
-  // 최상단 컴포넌트 내부(useState 등)에 아래 state 및 핸들러 추가
+  // 화면 우측 상단 '아이디 찾기 / 비번 찾기' 모달창 띄울지 말지 스위치 역할
   const [showFindId, setShowFindId] = useState(false);
   const [showFindPw, setShowFindPw] = useState(false);
 
-  // 약관 모달 상태
+  // 이용약관 모달창 상태값들
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [termsTitle, setTermsTitle] = useState("");
   const [termsContent, setTermsContent] = useState("");
 
-  // 로그인 핸들러
+  // 찐 로그인 API 쏘는 메인 핸들러
+  // 폼 제출 시 페이지 새로고침(새로고침되면 state 다 날아감) 막아두고, 서버한테 아이디 비번 던짐.
+  // 성공해서 JWT 토큰 나오면 브라우저 세션에 저장해두고 메인 화면으로 리다이렉트 시킴.
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setLoginError("");
@@ -70,7 +72,8 @@ export default function LoginPage({ onLogin }) {
     }
   };
 
-  // 회원가입 필드 변경 핸들러
+  // 회원가입 폼 인풋창 칠 때마다 불리는 공용 핸들러
+  // 키보드 입력할 때마다 화면 밑에 있던 빨간색 에러 글씨들 싹 지워줌.
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -141,7 +144,8 @@ export default function LoginPage({ onLogin }) {
     setShowTermsModal(true);
   };
 
-  // 아이디 중복 확인 핸들러
+  // 아이디 중복 확인
+  // 텍스트 다 썼는지 검사하고 서버에 중복되는 거 있나 물어봄
   const handleIdCheck = async () => {
     if (!formData.id.trim()) {
       setIdCheckMessage("아이디를 입력해주세요.");
@@ -152,9 +156,9 @@ export default function LoginPage({ onLogin }) {
         params: { id: formData.id },
       });
       if (res.data.available) {
-        setIdCheckMessage("✅ 사용 가능한 아이디입니다.");
+        setIdCheckMessage("사용 가능한 아이디입니다.");
       } else {
-        setIdCheckMessage("❌ 이미 사용 중인 아이디입니다.");
+        setIdCheckMessage("이미 사용 중인 아이디입니다.");
       }
     } catch (err) {
       console.error(err);
@@ -171,7 +175,7 @@ export default function LoginPage({ onLogin }) {
     }).open();
   };
 
-  // 전화번호 중복확인 핸들러
+  // 전화번호 중복확인
   const handlePhoneCheck = async () => {
     if (!formData.phoneNum.trim()) {
       setPhoneCheckMessage("전화번호를 입력해주세요.");
@@ -182,16 +186,16 @@ export default function LoginPage({ onLogin }) {
         params: { phoneNum: formData.phoneNum },
       });
       if (res.data.available) {
-        setPhoneCheckMessage("✅ 사용 가능한 전화번호입니다.");
+        setPhoneCheckMessage("사용 가능한 전화번호입니다.");
       } else {
-        setPhoneCheckMessage("❌ 이미 사용 중인 전화번호입니다.");
+        setPhoneCheckMessage("이미 사용 중인 전화번호입니다.");
       }
     } catch (err) {
       setPhoneCheckMessage("서버 오류가 발생했습니다.");
     }
   };
 
-  // 이메일 중복 확인 핸들러
+  // 이메일 중복 확인
   const handleEmailCheck = async () => {
     if (!formData.email.trim()) {
       setEmailCheckMessage("이메일을 입력해주세요.");
@@ -202,16 +206,18 @@ export default function LoginPage({ onLogin }) {
         params: { email: formData.email },
       });
       if (res.data.available) {
-        setEmailCheckMessage("✅ 사용 가능한 이메일입니다.");
+        setEmailCheckMessage("사용 가능한 이메일입니다.");
       } else {
-        setEmailCheckMessage("❌ 이미 사용 중인 이메일입니다.");
+        setEmailCheckMessage("이미 사용 중인 이메일입니다.");
       }
     } catch (err) {
       setEmailCheckMessage("서버 오류가 발생했습니다.");
     }
   };
 
-  // 회원가입 제출 핸들러
+  // 최종 회원가입 버튼 눌렀을 때
+  // 필드 다 채웠는지, 약관 체크했는지, 비밀번호 같은지 프론트 단에서 1차 검열 빡세게 함.
+  // 문제 없으면 백엔드한테 던지고 로그인 화면으로 예쁘게 쏴줌.
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
     setSignupError("");

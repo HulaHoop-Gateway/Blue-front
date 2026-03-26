@@ -9,7 +9,7 @@ const CancellationHistoryPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // 👇 회원 정보 상태
+  // 회원 정보 상태 (이름은 타이틀에, 코드는 내역 조회 쿼리에 씀)
   const [memberCode, setMemberCode] = useState("");
   const [memberName, setMemberName] = useState("");
 
@@ -19,7 +19,7 @@ const CancellationHistoryPage = () => {
         setLoading(true);
         setError("");
 
-        // 1) 토큰 가져오기
+        // 토큰 꺼내오기
         const token = sessionStorage.getItem("user_jwt");
         if (!token) {
           setError("로그인이 필요합니다.");
@@ -27,7 +27,7 @@ const CancellationHistoryPage = () => {
           return;
         }
 
-        // 2) 회원 정보 가져오기
+        // 회원 정보 가져오기 (member_code, name 추출용)
         const memberRes = await axios.get(
           "http://localhost:8090/api/member/info",
           {
@@ -39,17 +39,17 @@ const CancellationHistoryPage = () => {
         setMemberCode(memberCode);
         setMemberName(name);
 
-        // 3) 취소/환불 내역 가져오기 (status=R)
+        // 취소/환불 내역 가져오기 (status=R인 거래만)
         const response = await axiosInstance.get(
           `/api/history/${memberCode}`,
           {
-            params: { status: "R" }, // 취소/환불 내역만
+            params: { status: "R" }, // status=R(Refund/취소환불)인 내역만
           }
         );
 
         setHistories(response.data || []);
       } catch (err) {
-        console.error("Failed to fetch cancellation history:", err);
+        console.error("취소 내역 조회 실패:", err);
         setError("취소 내역을 불러오는 중 오류가 발생했습니다.");
       } finally {
         setLoading(false);
@@ -57,7 +57,7 @@ const CancellationHistoryPage = () => {
     };
 
     fetchMemberAndHistory();
-  }, []); // 🔹 최초 한 번만 실행
+  }, []); // 마운트 최초 1회
 
   const formatDate = (dateString) => {
     if (!dateString) return "";

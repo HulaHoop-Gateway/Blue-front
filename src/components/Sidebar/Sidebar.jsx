@@ -5,8 +5,10 @@ import './Sidebar.css';
 import { assets } from '../../assets/assets';
 import { Context } from '../../context/Context';
 
+// 좌측 고정 사이드바 컴포넌트
+// 메뉴 아이콘 눌러서 펼치거나 접을 수 있고, 내역 페이지나 마이페이지 이동 버튼이 모여 있음.
 const Sidebar = ({ onLogout }) => {
-    const [extended, setExtended] = useState(false);
+    const [extended, setExtended] = useState(false); // 사이드바 펼침/접힘 상태
     const { onSent, prevPrompts, setRecentPrompt, newChat } = useContext(Context);
     const navigate = useNavigate();
 

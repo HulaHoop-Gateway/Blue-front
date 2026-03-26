@@ -5,13 +5,16 @@ import { loadPaymentWidget } from "@tosspayments/payment-widget-sdk";
 import axiosInstance from '../../api/axiosInstance';
 import './InlinePaymentButton.css';
 
+// AI 채팅 안에서 '결제하기' 버튼 역할을 하는 인라인 컴포넌트
+// 버튼 누르면 모달창이 뜨고, 그 안에 토스페이먼츠 결제 위젯을 렌더링해 줌.
 const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대여 결제", onSuccess, reservationData, disabled, isCompleted }) => {
     const { setHistory, setPaymentCompleted } = useContext(Context);
     const widgetRef = useRef(null);
     const widgetContainerRef = useRef(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // 모달이 열릴 때 결제 위젯 초기화
+    // 모달이 열릴 때 토스 결제 위젯 로드하고 지정 div에 렌더링
+    // 모달 닫히면 컨테이너 싹 비워버림 (위젯 재마운트 시 충돌 방지)
     useEffect(() => {
         if (!isModalOpen || !amount || !widgetContainerRef.current) return;
 
@@ -56,6 +59,7 @@ const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대�
         setHistory(prev => [...prev, { type: "user", text: "결제하기" }]);
 
         try {
+            // 무작위 주문번호 생성 후 토스 결제 요청
             const orderId = crypto.randomUUID();
 
             const result = await widgetRef.current.requestPayment({
@@ -71,7 +75,7 @@ const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대�
             });
 
             setIsModalOpen(false); // 결제 성공 시 모달 닫기
-            // setPaymentCompleted(true); // ❌ Global state removal (handled by history update)
+            // setPaymentCompleted(true); // 전역 상태로 안 쓰고 히스토리 업데이트로 대체한 방식
 
             if (onSuccess) {
                 onSuccess();
@@ -82,7 +86,7 @@ const InlinePaymentButton = ({ amount, phoneNumber, orderName = "자전거 대�
                 }]);
             }
         } catch (error) {
-            console.error("🔥 결제 실패:", error);
+            console.error("결제 실패:", error);
 
             if (error.code === "USER_CANCEL" || error.message?.includes("cancel")) {
                 setIsModalOpen(false); // 취소 시 모달 닫기

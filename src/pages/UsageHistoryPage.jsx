@@ -5,6 +5,7 @@ import axiosInstance from "../api/axiosInstance";
 import "./UsageHistoryPage.css";
 
 const UsageHistoryPage = () => {
+  // 이용 완료(status='S') 내역 목록
   const [histories, setHistories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -13,6 +14,7 @@ const UsageHistoryPage = () => {
   const [memberName, setMemberName] = useState("");
 
   useEffect(() => {
+    // 마운트될 때 회원 코드 먼저 뽑고, 그 코드로 status=S 내역 조회
     const fetchMemberAndHistory = async () => {
       try {
         setLoading(true);
@@ -38,13 +40,13 @@ const UsageHistoryPage = () => {
         const historyRes = await axiosInstance.get(
           `/api/history/${memberCode}`,
           {
-            params: { status: "S" }, // 이용내역만
+            params: { status: "S" }, // status=S(Success/이용완료)인 내역만
           }
         );
 
         setHistories(historyRes.data || []);
       } catch (err) {
-        console.error("Failed to fetch usage history:", err);
+        console.error("이용 내역 조회 실패:", err);
         setError("이용내역을 불러오는 중 오류가 발생했습니다.");
       } finally {
         setLoading(false);
@@ -54,16 +56,19 @@ const UsageHistoryPage = () => {
     fetchMemberAndHistory();
   }, []);
 
+  // 날짜 포맷 헬퍼: ISO 형식 -> 분 단위 자르기 (초 이하 제거)
   const formatDate = (dateString) => {
     if (!dateString) return "";
     return dateString.toString().replace("T", " ").substring(0, 16);
   };
 
+  // 금액 포맷 헬퍼: 천 단위 콤마 + '원'
   const formatAmount = (amount) => {
     if (amount == null) return "";
     return `${Number(amount).toLocaleString()}원`;
   };
 
+  // 거래번호 포맷 헬퍼: '#0001' 형태
   const formatTransactionNum = (num) => {
     if (num == null) return "";
     return `#${String(num).padStart(4, "0")}`;
@@ -88,6 +93,7 @@ const UsageHistoryPage = () => {
     0
   );
 
+  // status='S'인 건수만 별도 계산 (헤더 요약 숫자 표시용)
   const completedCount = histories.filter(
     (item) => item.status === "S"
   ).length;

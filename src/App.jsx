@@ -11,11 +11,14 @@ import Main from "./components/Main/Main";
 
 import { ContextProvider } from "./context/Context";
 
+// 앱의 뼈대(Router)를 잡는 최상위 컴포넌트
+// 사용자가 들어오는 URL 경로에 따라 어떤 화면(Page)을 띄워줄지 분기 처리함.
 export default function App() {
   const [token, setToken] = useState(null);
 
-  // ✅ 페이지 새로고침 시 JWT 유지 및 만료 확인
-  // ✅ 페이지 새로고침 시 JWT 유지 및 만료 확인
+  // 페이지 새로고침 방어 로직 (JWT 생명 연장)
+  // 리액트는 특성상 새로고침하면 들고 있던 상태(token)가 다 날아가버려서 로그아웃 되어버림.
+  // 그래서 맨 처음 켜질 때(useEffect 빈 배열) 세션 스토리지를 뒤져서 토큰을 가져오고 만료 기간(exp)을 검증해서 다시 살려냄.
   useEffect(() => {
     const savedToken = sessionStorage.getItem("user_jwt");
     if (savedToken) {
@@ -53,9 +56,12 @@ export default function App() {
           {/* 로그인 페이지: 토큰이 있으면 홈으로 리다이렉트 */}
           <Route path="/login" element={token ? <Navigate to="/" /> : <LoginPage onLogin={handleLogin} />} />
 
-          {/* 보호된 경로 (Layout을 통해 렌더링) */}
+          {/* 
+            로그인한 사람만 들어올 수 있는 보호된 경로들 (라우터 가드)
+            token이 있으면 <Layout>(사이드바 뼈대)을 그리고, 없으면 얄짤없이 <Navigate>로 튕겨서 로그인창으로 보냄.
+          */}
           <Route path="/" element={token ? <Layout onLogout={handleLogout} /> : <Navigate to="/login" />}>
-            {/* Layout의 Outlet에서 렌더링될 컴포넌트들 */}
+            {/* Layout 안쪽 구멍(Outlet)에 쏙 들어갈 알맹이 컴포넌트들 */}
             <Route index element={<Main />} />
             <Route path="mypage" element={<MyPage token={token} onLogout={handleLogout} />} />
             <Route path="reservation-history" element={<ReservationHistoryPage />} />

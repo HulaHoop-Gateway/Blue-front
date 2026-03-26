@@ -27,24 +27,25 @@ export default function MyPage() {
   const [termsTitle, setTermsTitle] = useState("");
   const [termsContent, setTermsContent] = useState("");
 
-  // 회원정보 불러오기
+  // 내 정보 땡겨오는 찐 로직
+  // 컴포넌트 켜지자마자 백엔드한테 내 토큰 넘겨주면서 "내 정보 내놔" 라고 요청함.
   const fetchMemberInfo = async () => {
     try {
       const token = sessionStorage.getItem("user_jwt");
       if (!token) {
-        console.warn("⚠️ [MyPage] 토큰이 없습니다.");
+        console.warn("토큰이 없습니다.");
         alert("로그인이 필요합니다.");
         window.location.href = "/login";
         return;
       }
 
-      console.log("🔍 [MyPage] 회원정보 요청 중...");
+      console.log("회원정보 요청 중...");
       const response = await axiosInstance.get("/api/member/info");
 
-      console.log("✅ [MyPage] 회원정보 로드 성공:", response.data);
+      console.log("회원정보 로드 성공:", response.data);
       setMember(response.data);
     } catch (error) {
-      console.error("❌ [MyPage] 회원정보 불러오기 실패:", error);
+      console.error("회원정보 불러오기 실패:", error);
 
       // 401/403 에러는 axiosInstance interceptor가 처리
       // 여기서는 네트워크 오류 등만 처리
@@ -61,7 +62,7 @@ export default function MyPage() {
   };
 
   useEffect(() => {
-    fetchMemberInfo();
+    fetchMemberInfo(); // 마운트(화면 로드)될 때 무조건 1번만 실행됨.
   }, []);
 
   // 입력값 변경 핸들러
@@ -70,7 +71,8 @@ export default function MyPage() {
     setMember((prev) => ({ ...prev, [name]: value }));
   };
 
-  // SNS 알림 토글 (서버 호출 ❌ / 상태만 변경)
+  // SNS 알림 토글 스위치 껐다 켤 때
+  // 곧바로 서버에 안 보내고, 프론트 state에만 임시로 'Y', 'N' 적용해 둠. (최종은 수정 버튼 눌러야 감)
   const handleNotificationToggle = (e) => {
     const enabled = e.target.checked;
     setMember((prev) => ({
@@ -79,13 +81,14 @@ export default function MyPage() {
     }));
   };
 
-  // 회원정보 수정 (여기서 모든 정보 + 알림 상태 전송)
+  // 찐 회원정보 수정 (수정 버튼)
+  // 닉네임, 전번 쓴 거랑 위에 알림 토글 친 거 묶어서 백엔드에 반영함.
   const handleUpdate = async () => {
     try {
       await axiosInstance.patch("/api/member/update", member);
       alert("회원정보가 수정되었습니다.");
     } catch (error) {
-      console.error("❌ 회원정보 수정 실패:", error);
+      console.error("회원정보 수정 실패:", error);
       alert("회원정보 수정 중 오류가 발생했습니다.");
     }
   };
@@ -113,12 +116,13 @@ export default function MyPage() {
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setShowPasswordChange(false);
     } catch (error) {
-      console.error("❌ 비밀번호 변경 실패:", error);
+      console.error("비밀번호 변경 실패:", error);
       alert(error.response?.data || "비밀번호 변경 중 오류가 발생했습니다.");
     }
   };
 
   // 회원 탈퇴
+  // 누르면 확인창 띄운 다음에 강제로 토큰 찢어버리고 대문으로 쫓아냄
   const handleDelete = async () => {
     if (!window.confirm("정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) return;
     try {
@@ -127,7 +131,7 @@ export default function MyPage() {
       sessionStorage.removeItem("user_jwt");
       window.location.href = "/";
     } catch (error) {
-      console.error("❌ 회원 탈퇴 실패:", error);
+      console.error("회원 탈퇴 실패:", error);
       alert("회원 탈퇴 중 오류가 발생했습니다.");
     }
   };
