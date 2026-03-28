@@ -55,8 +55,8 @@ const createMovieMessage = (data) => {
     return {
         objectType: 'feed',
         content: {
-            title: '🎬 영화 예약 완료',
-            description: `${movieTitle}\n\n📅 상영시간: ${showtime}\n💺 좌석: ${seats}\n💰 결제금액: ${amount.toLocaleString()}원`,
+            title: '영화 예약 완료',
+            description: `${movieTitle}\n\n상영시간: ${showtime}\n좌석: ${seats}\n결제금액: ${amount.toLocaleString()}원`,
             imageUrl: 'https://mud-kage.kakao.com/dn/Q2iNx/btqgeRgV54P/VLdBs9cvyn8BJXB3o7N8UK/kakaolink40_original.png',
             link: {
                 mobileWebUrl: window.location.origin,

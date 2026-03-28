@@ -12,13 +12,16 @@ const axiosInstance = axios.create({
 });
 
 // 요청 가로채기 (Request Interceptor)
-// 백엔드는 API 요청 시 JWT 토큰이 없으면 무조건 입구컷(401) 시켜버리기 때문에,
-// 여기서 무언가를 요청하기 직전에 세션스토리지에서 토큰을 꺼내서 헤더(Authorization)에 자동으로 꽂아줌.
+// 백엔드 JwtFilter(JwtFilter.java)는 /api/login, /api/member/signup 등 PUBLIC_PATHS를 제외한
+// 모든 요청에서 HTTP 헤더 'Authorization' 값을 검사함.
+// 헤더가 없거나 'Bearer '로 시작하지 않으면 JwtFilter가 401 JSON 에러 응답을 바로 돌려보내고 컨트롤러까지 안 넘어감.
+// 그래서 여기서 모든 요청 직전에 세션스토리지의 토큰을 꺼내 "Bearer {token}" 형식으로 헤더에 자동으로 꽂아주는 거임.
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = sessionStorage.getItem("user_jwt");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      // 백엔드 JwtFilter: authHeader.substring(7)로 'Bearer ' 7글자 잘라내고 순수 토큰만 추출해서 검증함
       console.log("[axiosInstance] JWT 토큰 첨부됨");
     }
     return config;
@@ -40,18 +43,20 @@ axiosInstance.interceptors.response.use(
       const { status, data } = error.response;
 
       // 401 Unauthorized: 로그인 토큰이 없거나 기간이 다 돼서 죽었음
+      // 백엔드 JwtFilter에서 보내는 에러 예시:
+      //   { "error": "TOKEN_EXPIRED", "message": "토큰이 만료되었습니다.", "status": 401 }
+      //   { "error": "MISSING_TOKEN",  "message": "Authorization 헤더가 없거나 형식이...", "status": 401 }
+      // JwtFilter가 sendJsonError()로 직접 response를 씀 -> @ExceptionHandler 안 거침 -> 여기서 잡아줘야 함
       if (status === 401) {
         console.error("401 Unauthorized - 인증 실패 (토큰 만료/없음)");
 
-        sessionStorage.removeItem("user_jwt");
+        sessionStorage.removeItem("user_jwt"); // 죽은 토큰 브라우저에서 제거
 
         const errorMessage = data?.message || "로그인이 필요합니다. 다시 로그인해주세요.";
 
         // 이미 로그인 창이면 알림 두 번 안 뜨게 막음
         if (!window.location.pathname.includes("/login")) {
           alert(errorMessage);
-
-          // 로그인 페이지로 리다이렉트
           window.location.href = "/login";
         }
       }

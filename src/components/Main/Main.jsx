@@ -172,12 +172,12 @@ const Main = () => {
                                     <div className="result-data">
                                         <img src={assets.chatbot_icon} alt="" className="avatar" />
                                         <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
-                                            {/* 🎬 영화관 지도 표시 (이 메시지 위에) */}
+                                            {/* 영화관 지도 표시 (이 메시지 위에) */}
                                             {item.cinemaData && item.cinemaData.length > 0 && (
                                                 <KakaoMap locations={item.cinemaData} mapId={`cinema-map-${index}`} />
                                             )}
 
-                                            {/* 🚲 자전거 지도 표시 (이 메시지 위에) */}
+                                            {/* 자전거 지도 표시 (이 메시지 위에) */}
                                             {item.bikeData && item.bikeData.length > 0 && (
                                                 <KakaoMap locations={item.bikeData} mapId={`bike-map-${index}`} />
                                             )}
@@ -215,12 +215,12 @@ const Main = () => {
                             <div className="result-data">
                                 <img src={assets.chatbot_icon} alt="" className="avatar" />
                                 <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
-                                    {/* 🎬 타이핑 중 영화관 지도 표시 */}
+                                    {/* 타이핑 중 영화관 지도 표시 */}
                                     {cinemaLocations && cinemaLocations.length > 0 && (
                                         <KakaoMap locations={cinemaLocations} mapId="temp-cinema-map" />
                                     )}
 
-                                    {/* 🚲 타이핑 중 자전거 지도 표시 */}
+                                    {/* 타이핑 중 자전거 지도 표시 */}
                                     {bikeLocations && bikeLocations.length > 0 && (
                                         <KakaoMap locations={bikeLocations} mapId="temp-bike-map" />
                                     )}

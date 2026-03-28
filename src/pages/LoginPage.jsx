@@ -216,8 +216,8 @@ export default function LoginPage({ onLogin }) {
   };
 
   // 최종 회원가입 버튼 눌렀을 때
-  // 필드 다 채웠는지, 약관 체크했는지, 비밀번호 같은지 프론트 단에서 1차 검열 빡세게 함.
-  // 문제 없으면 백엔드한테 던지고 로그인 화면으로 예쁘게 쏴줌.
+  // 필드 다 채웠는지, 약관 체크했는지, 비밀번호 같은지 프론트 단에서 1차 검열함.
+  // 문제 없으면 백엔드한테 던지고 로그인 화면으로 넘김.
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
     setSignupError("");
@@ -430,7 +430,7 @@ export default function LoginPage({ onLogin }) {
         <div className="toggle-container">
           <div className="toggle">
             <div className="toggle-panel toggle-left">
-              <h1>다시 만나서 반가워요 👋</h1>
+              <h1>다시 만나서 반가워요</h1>
               <p>훌라후프 블루는 <b>가맹점과 고객을 하나의 링으로 묶는 AI 게이트웨이</b>예요.<br />
                 로그인하면 <b>예약·결제·통계</b>를 한 화면에서 이어서 처리할 수 있어요.</p>
               <button type="button" className="hidden" id="login" onClick={handleLoginClick}>
@@ -438,7 +438,7 @@ export default function LoginPage({ onLogin }) {
               </button>
             </div>
             <div className="toggle-panel toggle-right">
-              <h1>훌라후프 블루에 합류하기 🚀</h1>
+              <h1>훌라후프 블루에 합류하기</h1>
               <p>   <b>AI가 이해하고, 게이트웨이가 연결합니다.</b><br />
                 자전거·영화관 등 다양한 가맹점을 <b>하나의 링</b>으로 연결해
                 <b>실시간 예약/좌석/매출</b>을 깔끔하게 보여드려요.</p>

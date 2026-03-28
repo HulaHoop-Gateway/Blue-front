@@ -152,7 +152,7 @@ export const ContextProvider = ({ token, setToken, children }) => {
 
             setHistory(prev => [
                 ...prev,
-                { type: "ai", text: "💺 좌석 선택창을 열게요!" }
+                { type: "ai", text: "좌석 선택창을 열게요!" }
             ]);
             setSeatModalOpen(true);
             setLoading(false);
@@ -191,11 +191,11 @@ export const ContextProvider = ({ token, setToken, children }) => {
             const res = await axiosInstance.post("/api/ai/ask", { message: text });
             const aiText = res.data?.result || res.data?.message || "";
 
-            // 🎬 영화관 지도 데이터 분리 
+            // 영화관 지도 데이터 분리
             // 현재 내가 상영스케줄 조회 등을 진행 중이 아니면(처음 물어볼 때 화면이면) 백엔드가 준 제휴 영화관 목록을 지도에 뿌려줌.
             let cinemas = (res.data && Array.isArray(res.data.cinemas) && res.data.cinemas.length > 0 && !scheduleNum) ? res.data.cinemas : null;
 
-            // 🚲 자전거 지도 데이터 분리
+            // 자전거 지도 데이터 분리
             let bikes = (res.data && Array.isArray(res.data.bicycles) && res.data.bicycles.length > 0) ? res.data.bicycles : null;
 
             // 지도 중복 렌더링 방지용 더블 필터링
@@ -298,8 +298,8 @@ export const ContextProvider = ({ token, setToken, children }) => {
                 setHistory(prev => [...prev, {
                     type: "ai",
                     text: modified,
-                    bikeData: bikes,        // 🚲 Map한테 넘겨줄 자전거 좌표 덩어리
-                    cinemaData: cinemas,    // 🎬 Map한테 넘겨줄 영화 좌표 덩어리
+                    bikeData: bikes,        // Map한테 넘겨줄 자전거 좌표 덩어리
+                    cinemaData: cinemas,    // Map한테 넘겨줄 영화관 좌표 덩어리
                     action: extractedActionType || undefined,
                     amount: extractedAmount || undefined,
                     phone: extractedPhone || undefined,

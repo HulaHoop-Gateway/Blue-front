@@ -85,7 +85,7 @@ const KakaoMap = ({ locations }) => {
           map: map,
         });
 
-        // 🚲 자전거 vs 🎬 영화관에 따라 말풍선(인포윈도우) 내용 달리 렌더링
+        // 자전거인지 영화관인지에 따라 말풍선(인포윈도우) 내용 달리 렌더링
         let content = '';
         if (location.bicycleCode) {
           content = `<div style="padding:5px;font-size:12px;">${location.bicycleCode} (${location.bicycleType}) - ${location.status}</div>`;

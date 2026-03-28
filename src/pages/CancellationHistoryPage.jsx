@@ -1,6 +1,6 @@
 // src/pages/CancellationHistoryPage.jsx
 import React, { useState, useEffect } from "react";
-import axios from "axios";                 // 👈 추가: member/info용
+import axios from "axios"; // axiosInstance 없이 member/info를 직접 호출할 때 쓰는 일반 axios
 import axiosInstance from "../api/axiosInstance";
 import "./CancellationHistoryPage.css";
 
