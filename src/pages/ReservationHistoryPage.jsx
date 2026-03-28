@@ -5,12 +5,16 @@ import axiosInstance from '../api/axiosInstance';
 import './ReservationHistoryPage.css';
 
 const ReservationHistoryPage = () => {
+  // 예약 내역 리스트 (status='P'인 거래만 뽑아온 배열)
   const [histories, setHistories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [memberName, setMemberName] = useState('');
   const [lastReservationDate, setLastReservationDate] = useState("");
 
+  // 실제로 백엔드한테 API 쏘고 예약 내역 받아오는 로직
+  // 토큰 있는지 먼저 확인하고, 회원 코드 뽑아서 그 코드로 내역 조회함.
+  // 중간에 뭐 하나 실패해도 finally에서 로딩 스피너 꺼줌.
   const fetchReservationHistory = async () => {
     try {
       setLoading(true);
@@ -34,7 +38,7 @@ const ReservationHistoryPage = () => {
       }
 
       const response = await axiosInstance.get(`/api/history/${memberCode}`, {
-        params: { status: "P" }, // 예약 내역만
+        params: { status: "P" }, // status=P(Pending/예약완료)인 내역만 필터링
       });
       setHistories(response.data || []);
 
@@ -55,39 +59,45 @@ const ReservationHistoryPage = () => {
   };
 
   useEffect(() => {
-    fetchReservationHistory();
+    fetchReservationHistory(); // 마운트될 때 딱 1번 실행
   }, []);
 
+  // 예약 취소 핸들러
+  // 확인창 한 번 더 띄워서 실수 방지하고, 사용자가 '확인' 누르면 백엔드에 취소 요청 쏨.
+  // 성공하면 state의 배열에서 해당 거래번호 항목을 빠르게 지워서 리렌더링 없이 화면 바로 갱신.
   const handleCancel = async (transactionNum) => {
     if (window.confirm("정말로 이 예약을 취소하시겠습니까?")) {
       try {
         await axiosInstance.put("/api/history/cancel", { transactionNum });
         alert("예약이 성공적으로 취소되었습니다.");
-        // Refetch or remove the item from state
         setHistories(histories.filter(item => item.transactionNum !== transactionNum));
       } catch (err) {
-        console.error("Failed to cancel reservation:", err);
-        console.error("Error response:", err.response?.data); // 🔍 백엔드 에러 메시지 확인
+        console.error("예약 취소 실패:", err);
+        console.error("백엔드 에러 메시지:", err.response?.data);
         alert(`예약 취소 중 오류가 발생했습니다: ${err.response?.data?.message || err.message}`);
       }
     }
   };
 
+  // 날짜 포맷 헬퍼: ISO 문자열에서 T 제거, 초 단위 이후 잘라냄
   const formatDate = (dateString) => {
     if (!dateString) return "";
     return dateString.toString().replace("T", " ").substring(0, 16);
   };
 
+  // 금액 포맷 헬퍼: 1000 단위 콤마 + '원' 붙이기
   const formatAmount = (amount) => {
     if (amount == null) return "0";
     return `${Number(amount).toLocaleString()}원`;
   };
 
+  // 거래번호 포맷 헬퍼: '#0001' 형태로 보여줌
   const formatTransactionNum = (num) => {
     if (num == null) return "";
     return `#${String(num).padStart(4, "0")}`;
   };
 
+  // 기간 포맷 헬퍼: 영화는 startDate=endDate라 하나만 표시하고, 자전거는 범위로 표시
   const formatPeriod = (startDate, endDate) => {
     const start = formatDate(startDate);
     const end = formatDate(endDate);

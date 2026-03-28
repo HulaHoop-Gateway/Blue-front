@@ -1,7 +1,9 @@
 import React, { createContext, useState, useEffect } from "react";
 import axiosInstance from "../api/axiosInstance";
-import { loadPaymentWidget } from "@tosspayments/payment-widget-sdk"; // Toss Payments SDK import
+import { loadPaymentWidget } from "@tosspayments/payment-widget-sdk";
 
+// 이 앱 전체에서 필요한 데이터(토큰이나 채팅 내역 등)를 아무 컴포넌트나 꺼내 쓸 수 있도록
+// 커다란 전역 보따리를 하나 만드는 거라고 보면 됨.
 export const Context = createContext();
 
 export const ContextProvider = ({ token, setToken, children }) => {
@@ -14,34 +16,31 @@ export const ContextProvider = ({ token, setToken, children }) => {
     const [history, setHistory] = useState([]);
     const [isTyping, setIsTyping] = useState(false);
 
-    // 🔹 예약 상태 관리
+    // 예약 진행 상태 저장용
     const [scheduleNum, setScheduleNum] = useState(null);
     const [seatModalOpen, setSeatModalOpen] = useState(false);
     const [bikeLocations, setBikeLocations] = useState([]);
     const [cinemaLocations, setCinemaLocations] = useState([]);
 
-    // 🔹 결제 상태 관리
+    // 결제 창 띄울 때 필요한 정보들
     const [paymentAmount, setPaymentAmount] = useState(0);
     const [paymentPhone, setPaymentPhone] = useState("");
     const [actionType, setActionType] = useState(null);
     const [paymentCompleted, setPaymentCompleted] = useState(false);
 
-    // 🔹 토큰 변경 시(로그인/로그아웃) 채팅 초기화
-    // 🔹 토큰 변경 시(로그인/로그아웃) 채팅 초기화
+    // 토큰이 바뀌었을 때(로그인하거나 튕겼을 때) 
+    // 채팅 내용 싹 다 지우고 백엔드 세션도 엎어버림.
     useEffect(() => {
         newChat();
 
-        // 새로고침 시 백엔드 세션도 초기화 (플로우 탈출)
-        // 새로고침 시 백엔드 세션도 초기화 (플로우 탈출)
         const savedToken = sessionStorage.getItem("user_jwt");
         if (savedToken) {
-            // axiosInstance 대신 직접 호출하여 인터셉터 문제 배제
             import("axios").then(axios => {
                 axios.default.post("http://localhost:8090/api/ai/reset", {}, {
                     headers: { Authorization: `Bearer ${savedToken}` }
                 })
-                    .then(() => console.log("✅ Backend session reset success"))
-                    .catch(err => console.error("❌ Failed to reset backend session:", err));
+                    .then(() => console.log("백엔드 AI 챗봇 세션 초기화 성공"))
+                    .catch(err => console.error("백엔드 세션 초기화 실패:", err));
             });
         }
     }, [token]);
@@ -60,7 +59,8 @@ export const ContextProvider = ({ token, setToken, children }) => {
         setPaymentCompleted(false);
     };
 
-    // 🔹 Toss Payments 결제 요청
+    // 토스페이먼츠 연동 로직
+    // SDK 스크립트 불러와서 위젯 장착한 다음에, 주문번호 렌덤으로 따서 결제창 띄워주는 역할.
     const requestTossPayment = async (amount, phoneNumber, orderName = "자전거 대여 결제", onSuccess, onError) => {
         try {
             const widget = await loadPaymentWidget(
@@ -72,10 +72,11 @@ export const ContextProvider = ({ token, setToken, children }) => {
 
             const result = await widget.requestPayment({
                 orderId,
-                orderName, // ✅ 파라미터로 받은 orderName 사용
+                orderName,
                 amount
             });
 
+            // 프론트에서 결제 성공하면 영수증 키를 백엔드로 한 번 더 쏴서 이중 확인(승인) 받음
             await axiosInstance.post("/api/payments/confirm", {
                 paymentKey: result.paymentKey,
                 orderId: result.orderId,
@@ -86,8 +87,9 @@ export const ContextProvider = ({ token, setToken, children }) => {
                 onSuccess();
             }
         } catch (error) {
-            console.error("🔥 결제 실패:", error);
+            console.error("결제 실패:", error);
 
+            // 사용자가 단순히 결제창 끈 거면 에러 리포트 무시
             if (error.code === "USER_CANCEL" || error.message?.includes("cancel")) {
                 return;
             }
@@ -98,6 +100,7 @@ export const ContextProvider = ({ token, setToken, children }) => {
         }
     };
 
+    // 내가 챗봇한테 말 걸었을 때(전송) 돌아가는 메인 로직 처리
     const onSent = async (prompt) => {
         setResultData("");
         setLoading(true);
@@ -108,11 +111,11 @@ export const ContextProvider = ({ token, setToken, children }) => {
             text = input;
         }
 
-        // 사용자 메시지 추가
         const newHistoryItem = { type: "user", text };
 
-        // 🚫 취소/종료 키워드 감지 -> 이전 결제 버튼 비활성화
-        if (["취소", "그만", "종료", "안할래", "나가기"].some(keyword => text.includes(keyword))) {
+        // 취소나 종료 뉘앙스의 단어를 감지하면, 
+        // 화면에 남아있는 그 이전 '결제하기' 버튼 같은 걸 아예 못 누르게 회색(비활성화)으로 막아버림.
+        if ["취소", "그만", "종료", "안할래", "나가기"].some(keyword => text.includes(keyword))) {
             setHistory(prev => prev.map(item => {
                 if (item.action === 'PAYMENT_CONFIRM') {
                     return { ...item, disabled: true };
@@ -120,10 +123,8 @@ export const ContextProvider = ({ token, setToken, children }) => {
                 return item;
             }).concat(newHistoryItem));
         }
-        // ✅ 결제 완료 감지 -> 해당 버튼 완료 처리
         else if (text === "결제 완료") {
             setHistory(prev => {
-                // 가장 최근의 결제 버튼을 찾아서 완료 처리
                 const lastPaymentIndex = prev.findLastIndex(item => item.action === 'PAYMENT_CONFIRM');
                 if (lastPaymentIndex !== -1) {
                     const newHistory = [...prev];
@@ -138,12 +139,12 @@ export const ContextProvider = ({ token, setToken, children }) => {
 
         setInput("");
 
-        // 🔹 좌석 선택 모달 열기 명령 처리
+        // 좌석 선택 모달 오픈 캐치
         if (text === "좌석 선택창 열어줘" || (actionType === 'OPEN_SEAT_MODAL' && text === "네")) {
             if (!scheduleNum) {
                 setHistory(prev => [
                     ...prev,
-                    { type: "ai", text: "❗ 먼저 영화와 시간 선택 후 좌석을 불러와주세요." }
+                    { type: "ai", text: "먼저 영화와 시간 선택 후 좌석을 불러와주세요." }
                 ]);
                 setLoading(false);
                 return;
@@ -151,19 +152,18 @@ export const ContextProvider = ({ token, setToken, children }) => {
 
             setHistory(prev => [
                 ...prev,
-                { type: "ai", text: "🎬 좌석 선택창을 열게요!" }
+                { type: "ai", text: "좌석 선택창을 열게요!" }
             ]);
             setSeatModalOpen(true);
             setLoading(false);
             return;
         }
 
-        // 사용자 입력에 "상세"와 "좌석"이 포함되어 있으면 모달 오픈
         if (text.includes("상세") && text.includes("좌석")) {
             if (!scheduleNum) {
                 setHistory(prev => [
                     ...prev,
-                    { type: "ai", text: "❗ 먼저 영화와 시간 선택 후 좌석을 불러와주세요." }
+                    { type: "ai", text: "먼저 영화와 시간 선택 후 좌석을 불러와주세요." }
                 ]);
                 setLoading(false);
                 return;
@@ -171,63 +171,52 @@ export const ContextProvider = ({ token, setToken, children }) => {
 
             setHistory(prev => [
                 ...prev,
-                { type: "ai", text: "🎬 좌석 선택창을 열게요!" }
+                { type: "ai", text: "💺 좌석 선택창을 열게요!" }
             ]);
             setSeatModalOpen(true);
             setLoading(false);
             return;
         }
 
-        // 🔹 결제 완료 후 상태 초기화
+        // 결제가 끝났으면 다음 손님(예약) 받을 준비하려고 관련 상태 싹 다 갈아엎음
         if (text.includes("결제 완료") || text.includes("결제가 완료")) {
-            setPaymentCompleted(false); // ✅ 다음 예약을 위해 결제 완료 상태 리셋
+            setPaymentCompleted(false);
             setPaymentAmount(0);
             setPaymentPhone("");
             setActionType(null);
         }
 
         try {
+            // 진짜로 백엔드 AI 챗봇한테 말 던지고 답장 기다리는 부분
             const res = await axiosInstance.post("/api/ai/ask", { message: text });
             const aiText = res.data?.result || res.data?.message || "";
 
-            // 데이터 추출
-            // 🚲 자전거 데이터: 예약 진행 중(actionType이 있거나 결제 단계 등)이 아닐 때만 표시
-            // 초기 조회 시에는 actionType이 null이거나 특정 값일 수 있음. 
-            // 여기서는 "자전거 예약해줘" -> 목록 보여줌(지도O) -> "1번 선택" -> 상세/결제(지도X) 흐름을 가정.
-            // actionType이 'PAYMENT_CONFIRM' 등이면 지도를 안 보여주는 식.
-            // 하지만 더 확실한 건, AI가 "목록"을 줄 때만 지도를 띄우는 것.
-            // 백엔드에서 목록 줄 때만 bicycles/cinemas 데이터를 채워준다면 프론트는 그대로 쓰면 됨.
-            // 만약 백엔드가 계속 데이터를 준다면 프론트에서 걸러야 함.
-
-            // 🎬 영화관 데이터: 예약 진행 중(scheduleNum 등)이 아닐 때만 표시
+            // 영화관 지도 데이터 분리
+            // 현재 내가 상영스케줄 조회 등을 진행 중이 아니면(처음 물어볼 때 화면이면) 백엔드가 준 제휴 영화관 목록을 지도에 뿌려줌.
             let cinemas = (res.data && Array.isArray(res.data.cinemas) && res.data.cinemas.length > 0 && !scheduleNum) ? res.data.cinemas : null;
 
-            // 🚲 자전거 데이터
+            // 자전거 지도 데이터 분리
             let bikes = (res.data && Array.isArray(res.data.bicycles) && res.data.bicycles.length > 0) ? res.data.bicycles : null;
 
-            // 🚫 지도 중복 표시 방지 (강력한 필터링)
-            // 사용자가 무언가를 "선택"하거나 "예약"하는 단계라면 지도를 보여주지 않음.
-            // 또한 AI 응답에 "결제", "예약" 관련 단어가 있어도 숨김.
-            const filterKeywords = ["선택", "예약", "결제", "해줘", "할게"];
-            // "해줘"는 "예약해줘" 같은 명령일 수 있으므로 주의. 하지만 "1번 선택해줘" 같은 경우를 잡아야 함.
-            // 따라서 "숫자 + 번" 또는 "선택" 키워드가 핵심.
-
+            // 지도 중복 렌더링 방지용 더블 필터링
+            // 사용자가 "1번 선택", "예약" 단계로 넘어갔는데도 지도가 계속 떠있으면 시야를 가리니까,
+            // 텍스트에 뭔가 결정하는 키워드가 들어있으면 지도 데이터를 아예 null로 죽여버림.
             if (text.includes("선택") || text.includes("번") || text.includes("결제") || /^\d+$/.test(text.trim())) {
                 cinemas = null;
                 bikes = null;
             }
 
-            // AI 응답 텍스트 기반 2차 필터링
+            // AI 대답 내용에 따라서도 한 번 더 죽여줌
             if (aiText.includes("결제") || aiText.includes("예약되었습니다") || aiText.includes("좌석")) {
                 cinemas = null;
                 bikes = null;
             }
 
-            // JSON 파싱 (결제 정보 등)
+            // 백엔드가 AI 대답 끝에 JSON 배열 박싱해서 { "actionType": ... } 히든 정보 보낸 걸 정규식으로 따서 파싱
             let extractedActionType = null;
             let extractedAmount = null;
             let extractedPhone = null;
-            let extractedPaymentType = null; // ✅ 결제 타입 추가
+            let extractedPaymentType = null;
 
             try {
                 const jsonMatch = aiText.match(/\{[\s\S]*\}/);
@@ -236,14 +225,12 @@ export const ContextProvider = ({ token, setToken, children }) => {
                     extractedActionType = jsonData.actionType || null;
                     extractedAmount = jsonData.amount ? Number(jsonData.amount) : null;
                     extractedPhone = jsonData.phone ? String(jsonData.phone).replace(/-/g, '') : null;
-                    extractedPaymentType = jsonData.paymentType || null; // ✅ 결제 타입 추출
+                    extractedPaymentType = jsonData.paymentType || null;
 
-                    // JSON에서 scheduleNum 추출 (더 안정적)
                     if (jsonData.scheduleNum) {
                         setScheduleNum(Number(jsonData.scheduleNum));
                     }
 
-                    /** scheduleNum 추출 (백업: 정규식) */
                     const match =
                         aiText.match(/"scheduleNum"\s*:\s*([0-9]+)/i) ||
                         aiText.match(/scheduleNum\s*[:=]\s*([0-9]+)/i) ||
@@ -251,7 +238,6 @@ export const ContextProvider = ({ token, setToken, children }) => {
 
                     if (match && !jsonData.scheduleNum) setScheduleNum(Number(match[1]));
 
-                    // 상태 업데이트
                     if (extractedAmount) setPaymentAmount(extractedAmount);
                     if (extractedPhone) setPaymentPhone(extractedPhone);
                     if (extractedActionType) {
@@ -260,33 +246,30 @@ export const ContextProvider = ({ token, setToken, children }) => {
                             setSeatModalOpen(true);
                         }
 
-                        // 🚲 자전거: 결제/예약 진행 단계(ActionType 존재)면 지도 숨김
+                        // 결제 확인창 떴는데 자전거 지도가 뒤에 서있으면 이상하니까 숨김
                         if (extractedActionType === 'PAYMENT_CONFIRM' || extractedActionType === 'BIKE_RESERVE') {
                             bikes = null;
                         }
                     }
                 }
             } catch (e) {
-                console.error("JSON parsing error", e);
+                console.error("JSON 파싱 에러 (백엔드 데이터 형식 오류 의심됨)", e);
             }
 
-            // 추가: 텍스트에 "결제"나 "예약" 관련 내용이 명확하면 지도 숨김 (안전장치)
             if (aiText.includes("결제") || aiText.includes("예약되었습니다")) {
                 bikes = null;
-                // 영화는 scheduleNum으로 이미 제어됨
             }
 
-            // 지도 데이터 상태 업데이트 (타이핑 중 표시를 위해)
+            // 타이핑될 화면을 위해 프론트 상태 변수에 세팅
             if (bikes) setBikeLocations(bikes);
             else setBikeLocations([]);
 
             if (cinemas) setCinemaLocations(cinemas);
             else setCinemaLocations([]);
 
-            // 화면 표시용 텍스트 정리 (JSON 제거)
+            // 채팅화면엔 진짜 말투만 나와야 하니까 뽑아낸 JSON 객체 문자열 부분은 싹 잘라버림
             let displayText = aiText.replace(/\{[\s\S]*\}/g, "").trim();
 
-            // 불필요한 공백 정리
             displayText = displayText.replace(/\n\s*\n/g, "\n\n");
 
             let modified = displayText
@@ -295,47 +278,49 @@ export const ContextProvider = ({ token, setToken, children }) => {
                 .join("")
                 .replace(/\*/g, "<br />");
 
-            setLoading(false); // 로딩 종료
-            setIsTyping(true);  // 타이핑 시작
+            setLoading(false);
+            setIsTyping(true);
 
-            // ✍️ 타이핑 효과 구현 (글자 단위)
+            // 타이핑 효과 구현하는 단순 트릭
+            // 길다란 문자를 배열로 쪼개고, 0.01초 간격으로 한 글자씩 이어붙이면서 화면 업데이트 시켜줌
             const characters = modified.split("");
 
-            // 깜빡임 방지
             if (characters.length > 0) {
                 characters.forEach((char, i) => {
                     setTimeout(() => {
                         setResultData(prev => prev + char);
-                    }, 10 * i); // 속도: 10ms (0.01초)
+                    }, 10 * i);
                 });
             }
 
-            // 타이핑 종료 후 히스토리 추가
+            // 한 글자씩 다 박히고 나서 최종적으로 히스토리 배열에 통합 세이브
             setTimeout(() => {
                 setHistory(prev => [...prev, {
                     type: "ai",
                     text: modified,
-                    bikeData: bikes,
-                    cinemaData: cinemas,
+                    bikeData: bikes,        // Map한테 넘겨줄 자전거 좌표 덩어리
+                    cinemaData: cinemas,    // Map한테 넘겨줄 영화관 좌표 덩어리
                     action: extractedActionType || undefined,
                     amount: extractedAmount || undefined,
                     phone: extractedPhone || undefined,
-                    paymentType: extractedPaymentType || undefined // ✅ 결제 타입 추가
+                    paymentType: extractedPaymentType || undefined
                 }]);
                 setResultData("");
-                setIsTyping(false); // 타이핑 종료
-                // 지도 상태 초기화 (History로 넘어갔으므로)
+                setIsTyping(false);
+
+                // 히스토리 컴포넌트 쪽으로 렌더링 턴을 넘겼으니, 본체 지도는 지워둠
                 setBikeLocations([]);
                 setCinemaLocations([]);
             }, 10 * characters.length + 200);
 
         } catch (error) {
-            console.error("Error:", error);
+            console.error("에러 발생:", error);
             setLoading(false);
-            setResultData("에러가 발생했습니다. 다시 시도해주세요.");
+            setResultData("통신 중 에러가 발생했습니다. 다시 시도해주세요.");
         }
     };
 
+    // 요 보따리를 Provider로 던져주면, 하위 자식들이 useContext(Context) 해서 맘대로 빼 씀.
     const contextValue = {
         onSent,
         input,

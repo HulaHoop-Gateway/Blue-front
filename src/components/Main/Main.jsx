@@ -17,12 +17,15 @@ const Main = () => {
     const chatContainerRef = useRef(null);
     const inputRef = useRef(null);
 
-    // ✅ 한글 IME 조합 상태
+    // 한글 IME 조합 상태 (조합 중에 엔터 누르면 글자 깨지는 현상 방지용)
     const [isComposing, setIsComposing] = useState(false);
-    const [isRecording, setIsRecording] = useState(false);
+    const [isRecording, setIsRecording] = useState(false); // 마이크 녹음 켜짐/꺼짐
     const recognitionRef = useRef(null);
 
-    // Initialize microphone permission and speech recognition
+    // 마이크 권한 및 음성 인식 엔진 초기화 (앱 시작 1번)
+    // Chrome에서만 SpeechRecognition API가 지원되기 때문에, 없으면 조기 종료.
+    // continuous: 이야기 도중에 자동으로 멈추지 않게 계속 듣는 모드.
+    // interimResults: 확정 안 된 중간 문장도 실시간으로 input에 채워줌.
     useEffect(() => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
@@ -47,7 +50,7 @@ const Main = () => {
                     interim += transcriptPart;
                 }
             }
-            // 인식된 텍스트를 바로 input에 반영
+            // 최종+중간 문장 합쳐서 인풋창에 실시간으로 뿌려줌
             setInput(final + interim);
         };
 
@@ -86,6 +89,7 @@ const Main = () => {
         }
     };
 
+    // 채팅 히스토리나 타이핑 내용이 바뀔 때마다 스크롤을 맨 아래로
     useEffect(() => {
         if (chatContainerRef.current) {
             chatContainerRef.current.scrollTo({
@@ -95,13 +99,15 @@ const Main = () => {
         }
     }, [history, resultData]);
 
+    // 전송 버튼 / 엔터 눌렀을 때 실행되는 메시지 전송 함수
+    // 타이핑 중이거나(isTyping), 한글 조합 중이면(isComposing) 무시
     const sendMessage = () => {
         const trimmed = (input || '').trim();
         if (!trimmed || isTyping || isComposing) return;
 
         const message = trimmed;
 
-        // ✅ 조합 중 글자 재삽입 방지 흐름
+        // 조합 중 글자 재삽입 방지: blur 시키고 인풋 비운 다음 비동기로 보냄
         inputRef.current?.blur();
         setInput('');
 
@@ -166,12 +172,12 @@ const Main = () => {
                                     <div className="result-data">
                                         <img src={assets.chatbot_icon} alt="" className="avatar" />
                                         <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
-                                            {/* 🎬 영화관 지도 표시 (메시지 위에) */}
+                                            {/* 영화관 지도 표시 (이 메시지 위에) */}
                                             {item.cinemaData && item.cinemaData.length > 0 && (
                                                 <KakaoMap locations={item.cinemaData} mapId={`cinema-map-${index}`} />
                                             )}
 
-                                            {/* 🚲 자전거 지도 표시 (메시지 위에) */}
+                                            {/* 자전거 지도 표시 (이 메시지 위에) */}
                                             {item.bikeData && item.bikeData.length > 0 && (
                                                 <KakaoMap locations={item.bikeData} mapId={`bike-map-${index}`} />
                                             )}
@@ -184,7 +190,7 @@ const Main = () => {
                                     </div>
                                 )}
 
-                                {/* ✅ 결제 버튼 렌더링 */}
+                                {/* AI 응답에 actionType=PAYMENT_CONFIRM이 달려오면 결제 버튼 렌더링 */}
                                 {item.type === 'ai' &&
                                     item.action === 'PAYMENT_CONFIRM' &&
                                     item.amount && (
@@ -204,17 +210,17 @@ const Main = () => {
                             </React.Fragment>
                         ))}
 
-                        {/* 로딩 중이거나 타이핑 중일 때 표시 */}
+                        {/* 백엔드 응답 대기 중이거나 타이핑 애니메이션 중일 때 */}
                         {(loading || resultData) && (
                             <div className="result-data">
                                 <img src={assets.chatbot_icon} alt="" className="avatar" />
                                 <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
-                                    {/* 🎬 타이핑 중 영화관 지도 표시 */}
+                                    {/* 타이핑 중 영화관 지도 표시 */}
                                     {cinemaLocations && cinemaLocations.length > 0 && (
                                         <KakaoMap locations={cinemaLocations} mapId="temp-cinema-map" />
                                     )}
 
-                                    {/* 🚲 타이핑 중 자전거 지도 표시 */}
+                                    {/* 타이핑 중 자전거 지도 표시 */}
                                     {bikeLocations && bikeLocations.length > 0 && (
                                         <KakaoMap locations={bikeLocations} mapId="temp-bike-map" />
                                     )}
@@ -271,7 +277,7 @@ const Main = () => {
                 </div>
             </div>
 
-            {/* ✅ 좌석 모달 */}
+            {/* 💺 좌석 선택 모달 (Context에서 seatModalOpen=true가 될 때 렌더링) */}
             <SeatModal
                 open={seatModalOpen}
                 scheduleNum={scheduleNum}

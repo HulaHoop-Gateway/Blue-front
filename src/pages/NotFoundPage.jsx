@@ -1,6 +1,8 @@
 import React from "react";
 import "./NotFoundPage.css";
 
+// 존재하지 않는 URL로 접근했을 때 보여주는 404 페이지
+// glitch CSS 애니메이션 효과로 '404' 텍스트를 꾸밈
 const NotFoundPage = () => {
     return (
         <div className="not-found-page">

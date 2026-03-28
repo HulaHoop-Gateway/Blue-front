@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axiosInstance from "../api/axiosInstance";
-import "./FindAccountModal.css"; // ✅ Import the new CSS
+import "./FindAccountModal.css";
 
 export default function FindPasswordModal({ onClose }) {
   const [id, setId] = useState("");
@@ -8,6 +8,9 @@ export default function FindPasswordModal({ onClose }) {
   const [result, setResult] = useState(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  // 비밀번호 찾기 버튼 눌렀을 때
+  // 아이디랑 이메일이 DB에 동시에 일치하는 회원이면,
+  // 서버 쪽에서 임시 비밀번호 발급해서 등록된 이메일로 쏴줌.
   const handleFind = async (e) => {
     e.preventDefault();
     setIsSuccess(false);
@@ -37,6 +40,7 @@ export default function FindPasswordModal({ onClose }) {
     }
   };
 
+  // 성공 여부에 따라 메시지 색상 클래스 결정
   const getResultMessageClass = () => {
     if (!result) return "result-message";
     return isSuccess ? "result-message success" : "result-message error";
@@ -70,7 +74,7 @@ export default function FindPasswordModal({ onClose }) {
         {result && <div className={getResultMessageClass()}>{result}</div>}
 
         <div className="button-group">
-            <button className="close-btn" onClick={onClose}>닫기</button>
+          <button className="close-btn" onClick={onClose}>닫기</button>
         </div>
       </div>
     </div>
